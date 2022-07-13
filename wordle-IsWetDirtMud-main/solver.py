@@ -21,7 +21,6 @@ class Solver(Player):
         """the make_guess function makes a guess.
 
         Currently, it always guesses "salty". Write code here to improve your solver.
-
         For compatibility with the benchmarking script please ensure that you
         always increment the number of guesses when you make a guess
 
