@@ -27,7 +27,7 @@ class Solver(Player):
 
         """
         self.num_guesses += 1
-        return "salty"
+        return "soupy"
 
     def update_knowledge(self, info):
         """update_knowledge updates the solver's knowledge with an `info` object
