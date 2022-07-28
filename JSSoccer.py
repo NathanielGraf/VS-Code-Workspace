@@ -1,6 +1,6 @@
 import numpy as np
 
-soccerballmatrix = [[0, 1, 0, 0, 0, 0, 0], [0, 0, 2/3, 0, 0, 0, 1/3], [0, 1/3, 1/3, 1/3, 0, 0, 0], [0, 0, 1/3, 1/3, 1/3, 0, 0], [0, 0, 0, 1/3, 1/3, 1/3, 0], [0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0, 0]]
+soccerballmatrix = [[0, 1, 0, 0, 0, 0, 0], [0, 0, 2/3, 0, 0, 0, 1/3], [0, 1/3, 1/3, 1/3, 0, 0, 0], [0, 0, 1/3, 1/3, 1/3, 0, 0], [0, 0, 0, 2/3, 0, 1/3, 0], [0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0, 0]]
 A = np.array(soccerballmatrix)
 #print(A)
 
@@ -10,10 +10,18 @@ def probabilityNSteps(n):
         probabilitynsteps = np.matmul(Y, A)
         #print(probabilitynsteps)
         Y = probabilitynsteps
-    
+
     #print(np.array(Y) [0,0])
     return (np.array(Y) [0,6])
     #return int(probabilitynsteps)
+
+def expectedValue(z):
+    sumlist = []
+    for x in range(2, z+1):
+        stepprobstep = probabilityNSteps(x) * x
+        sumlist.append(stepprobstep)
+        #print(sumlist)
+    return sum(sumlist)
 
 def probabilitylessNSteps(n):
     sumlist = []
@@ -25,7 +33,7 @@ def probabilitylessNSteps(n):
         
 
 #Plane
- 
+'''
 answer = (probabilitylessNSteps(100))
 print(answer)
 
@@ -55,5 +63,6 @@ def probabilitylessNSteps(n):
 
 
  
-answer = (probabilitylessNSteps(100))
+ '''
+answer = (expectedValue(4000))
 print(answer)
