@@ -2,6 +2,7 @@ from ast import Break, Continue
 import string
 from urllib.request import HTTPBasicAuthHandler
 import random
+import copy
 
 '''
 To play the game, do g = GameStateManager(dim), where dim is the dimension of your board.
@@ -35,6 +36,8 @@ class Board:
         #Creates a clone of the matrix, so we can modify it without affecting the original
         self.clonematrix = [" "] * 4
         
+        self.checkmatrix = [" "] * 4
+        
         #Remakes the row 4 times to make it 2d
         for x in range(0, 4): 
             self.matrix[x] = [" "]*4
@@ -42,6 +45,9 @@ class Board:
         #Remakes the clone 4 times to make it 2d
         for x in range(0, 4):
             self.clonematrix[x] = [" "] * 4
+            
+        for x in range(0, 4):
+            self.checkmatrix[x] = [" "] * 4
     
     #Makes it so that you don't have to call Board each time you need to use row
     @staticmethod
@@ -77,7 +83,7 @@ class Board:
         #Return the finished board
         return str_output
     #Play function
-    def play(self, piecetoplace, coordrow, coordcolumn): 
+    def play(self, piecetoplace, coordrow, coordcolumn, board): 
         
         """
         Coordrow gives row position
@@ -98,18 +104,18 @@ class Board:
         colpos = coordcolumn
     
         #Checked if the place we are placing the token is empty or not, if it isn't, give message
-        if self.matrix[rowpos][colpos] != " ": 
+        if board[rowpos][colpos] != " ": 
             raise Exception("Please only place your token in an unoccupied square!")
         
         #Sets the position equal to the token
-        self.matrix[rowpos][colpos] = piecetoplace
+        board[rowpos][colpos] = piecetoplace
         
         #piececlass.pieceslist.remove(piecetoplace)
         
        
            
     #Winner function
-    def winner(self):   
+    def winner(self, board):   
         
         
         
@@ -127,8 +133,8 @@ class Board:
                 
                 #Compare row x column i to the one to the right of it, if it is the same, continue, if both comparisons are true, prints winner
                     
-                    if self.matrix[x][i] != " " and self.matrix[x][i+1] != " ":
-                        if ((self.matrix[x][i])[z] == (self.matrix[x][i+1])[z]):
+                    if board[x][i] != " " and board[x][i+1] != " ":
+                        if ((board[x][i])[z] == (board[x][i+1])[z]):
                             if i + 2 == 4:
                                 print("Player " + game.getPlayerTurn() + " is the winner!")
                                 return True
@@ -152,8 +158,8 @@ class Board:
                 #Makes i test through dim - 1, since we only need to compare twice
                 for i in range(0, 3):
                 #Compare row x column i to the one to the right of it, if it is the same, continue, if both comparisons are true, prints winner
-                    if self.matrix[i][x] != " " and self.matrix[i+1][x] != " ":
-                        if ((self.matrix[i][x])[z] == (self.matrix[i+1][x])[z]):
+                    if board[i][x] != " " and board[i+1][x] != " ":
+                        if ((board[i][x])[z] == (board[i+1][x])[z]):
                             if i + 2 == 4:
                                 print("Player " + game.getPlayerTurn() + " is the winner!")
                                 return True
@@ -169,8 +175,8 @@ class Board:
             
         for z in range(0, 4):
             for i in range(0, 3):
-                if self.matrix[i][i] != " " and self.matrix[i+1][i+1] != " ":
-                    if ((self.matrix[i][i])[z] == (self.matrix[i+1][i+1])[z]):
+                if board[i][i] != " " and board[i+1][i+1] != " ":
+                    if ((board[i][i])[z] == (board[i+1][i+1])[z]):
                     
                         if i + 2 == 4:
                             print("Player " + game.getPlayerTurn() + " is the winner!")
@@ -187,8 +193,8 @@ class Board:
         #for x in range(0, 3):
         for z in range(0, 4):
             for i in range(0, 3):
-                if self.matrix[3-i][i] != " " and self.matrix[2-i][i+1] != " ":
-                    if ((self.matrix[3-i][i])[z] == (self.matrix[2-i][i+1])[z]):
+                if board[3-i][i] != " " and board[2-i][i+1] != " ":
+                    if ((board[3-i][i])[z] == (board[2-i][i+1])[z]):
                         if i + 2 == 4:
                             print("Player " + game.getPlayerTurn() + " is the winner!")
                             return True  
@@ -215,7 +221,7 @@ class GameStateManager:
     def __init__(self): 
         
         #Define b as a board of size dim
-        #self.b = Board()
+        self.board = Board()
         
         #Set turncount to 0
         self.turncount = 0
@@ -280,16 +286,50 @@ class GameStateManager:
     
         piececlass.coordinates.remove(coord)
         
-        self.b.play(piecetoplace, coordrow, coordcolumn)
+        self.board.play(piecetoplace, coordrow, coordcolumn, self.board.matrix)
         
-        print(self.b)
+        print(self.board)
         
         #if self.turncount == 16:
             #print("It's a tie game!")
             #return True
         
-        
+        '''
+        CHANGE b to board 
+        Also change Board.matrix to board.matrix
+        '''
             
+    def makeMoveAlwaysWin(self):
+        piecetoplace = self.getPieceToGiveRandom()
+        
+        self.turncount = self.turncount + 1
+        
+        print("Turn " + str(self.turncount))
+        
+        print("Player " + game.getPlayerTurn() + "'s turn!")
+        
+        coord = self.alwaysWinIfPossibleCheck()
+        
+        coordrow = coord[0]
+        coordcolumn = coord[1]
+        
+    
+        piececlass.coordinates.remove(coord)
+        
+        self.board.play(piecetoplace, coordrow, coordcolumn, self.board.matrix)
+        
+        print(self.board)
+        
+        #if self.turncount == 16:
+            #print("It's a tie game!")
+            #return True
+        
+        '''
+        CHANGE b to board 
+        Also change Board.matrix to board.matrix
+        '''
+            
+    
     #Define makeMove function
     def makeMove(self):
         #Regression testing, save as a test case.
@@ -314,16 +354,16 @@ class GameStateManager:
         #Gets the current token from the getToken function
         
         #Passes in these 3 arguments into the play function
-        self.b.play(piecetoplace, coordrow, coordcolumn)
+        self.board.play(piecetoplace, coordrow, coordcolumn, self.board.matrix)
         
         #if self.turncount == 16:
             #print("It's a tie game!")
             #return None
-        
+    
         
         
         #Print out b so the player can see the board 
-        print(self.b)
+        print(self.board)
         
     def getPlayerTurn(self):
         
@@ -331,9 +371,39 @@ class GameStateManager:
             return "2"
         else:
             return "1"
+        
+    def alwaysWinIfPossibleCheck(self):
+        piecetoplace = self.getPieceToGive()
+        for i in range(0, len(piececlass.coordinates)):
+            coord = piececlass.coordinates[i]
+            coordrow = coord[0]
+            coordcolumn = coord[1]
+            
+            Board.checkmatrix = copy.deepcopy(Board.matrix)
+            
+            self.board.play(piecetoplace, coordrow, coordcolumn, Board.checkmatrix)
+            
+            if self.board.winner == True:
+                return coord
+            
+            
+            
+            
+            
+          
 
-GameStateManager.b = Board()
 piececlass = Pieces()
 game = GameStateManager()
-while GameStateManager.b.winner() != True:
+while game.board.winner(game.board.matrix) != True:
     game.makeMoveRandom()
+
+'''
+ALWAYS WIN!:
+
+If you are given a piece which has a winning spot, you must play it there:
+
+Take the piece
+Place it in every spot on a fake board
+if it makes a win, play it there
+
+'''
