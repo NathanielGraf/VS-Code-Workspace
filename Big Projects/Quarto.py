@@ -136,7 +136,7 @@ class Board:
                     if board[x][i] != " " and board[x][i+1] != " ":
                         if ((board[x][i])[z] == (board[x][i+1])[z]):
                             if i + 2 == 4:
-                                print("Player " + game.getPlayerTurn() + " is the winner!")
+                                #Print("Player " + game.getPlayerTurn() + " is the winner!")
                                 return True
                                 
                             
@@ -161,7 +161,7 @@ class Board:
                     if board[i][x] != " " and board[i+1][x] != " ":
                         if ((board[i][x])[z] == (board[i+1][x])[z]):
                             if i + 2 == 4:
-                                print("Player " + game.getPlayerTurn() + " is the winner!")
+                                #print("Player " + game.getPlayerTurn() + " is the winner!")
                                 return True
                             
                         
@@ -179,7 +179,7 @@ class Board:
                     if ((board[i][i])[z] == (board[i+1][i+1])[z]):
                     
                         if i + 2 == 4:
-                            print("Player " + game.getPlayerTurn() + " is the winner!")
+                            #print("Player " + game.getPlayerTurn() + " is the winner!")
                             return True   
                         
                     else: 
@@ -196,7 +196,7 @@ class Board:
                 if board[3-i][i] != " " and board[2-i][i+1] != " ":
                     if ((board[3-i][i])[z] == (board[2-i][i+1])[z]):
                         if i + 2 == 4:
-                            print("Player " + game.getPlayerTurn() + " is the winner!")
+                            #print("Player " + game.getPlayerTurn() + " is the winner!")
                             return True  
                 
                     else: 
@@ -308,7 +308,11 @@ class GameStateManager:
         
         print("Player " + game.getPlayerTurn() + "'s turn!")
         
-        coord = self.alwaysWinIfPossibleCheck()
+        
+        if self.alwaysWinIfPossibleCheck(piecetoplace) == False:
+            coord = random.choice(piececlass.coordinates)
+        else:
+            coord = self.alwaysWinIfPossibleCheck(piecetoplace)
         
         coordrow = coord[0]
         coordcolumn = coord[1]
@@ -372,19 +376,21 @@ class GameStateManager:
         else:
             return "1"
         
-    def alwaysWinIfPossibleCheck(self):
-        piecetoplace = self.getPieceToGive()
+    def alwaysWinIfPossibleCheck(self, piecetoplace):
+        self.piecetoplace = piecetoplace
         for i in range(0, len(piececlass.coordinates)):
             coord = piececlass.coordinates[i]
             coordrow = coord[0]
             coordcolumn = coord[1]
             
-            Board.checkmatrix = copy.deepcopy(Board.matrix)
+            self.board.checkmatrix = copy.deepcopy(self.board.matrix)
             
-            self.board.play(piecetoplace, coordrow, coordcolumn, Board.checkmatrix)
-            
-            if self.board.winner == True:
+            self.board.play(piecetoplace, coordrow, coordcolumn, self.board.checkmatrix)
+        
+            if self.board.winner(self.board.checkmatrix) == True:
                 return coord
+            
+        return False
             
             
             
@@ -395,7 +401,9 @@ class GameStateManager:
 piececlass = Pieces()
 game = GameStateManager()
 while game.board.winner(game.board.matrix) != True:
-    game.makeMoveRandom()
+    game.makeMoveAlwaysWin()
+if game.board.winner(game.board.matrix) == True:
+    print("Player " + game.getPlayerTurn() + " is the winner!")
 
 '''
 ALWAYS WIN!:
