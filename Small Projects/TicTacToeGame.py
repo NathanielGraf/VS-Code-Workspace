@@ -2,6 +2,8 @@ from ast import Break, Continue
 import string
 from urllib.request import HTTPBasicAuthHandler
 
+#Has to be run through the interactive python shell to work properly, use quarto for cooler version.
+
 '''
 To play the game, do g = GameStateManager(dim), where dim is the dimension of your board.
 Then you can call g.makeMove() to make your moves. 

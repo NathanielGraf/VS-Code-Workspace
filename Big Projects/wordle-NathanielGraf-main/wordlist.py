@@ -13,6 +13,9 @@ class WordList():
         given, read from "possible_words.txt"
 
         """
+        #Word list is not actually a list 
+        #It's an object which encapsulates a list and has useful functions we can use
+        
         if given_words is None:
             self.words = []
             with open(word_file) as fp:
@@ -36,9 +39,24 @@ class WordList():
 
     def __len__(self):
         return len(self.words)
+    
+    def __getitem__(self,i):
+        return self.words[i]
+    
+    def remove(self, word):
+        return self.words.remove(word)
+    
+    def __sub__(self, words_to_remove):
+        return self.words - words_to_remove
+    
+    #Subscripting is indexing
 
     def refine(self, information):
         """updates the words to be consistent with the `information`"""
+        #Updating the state of wordlist, updating the words within wordlist
+        #For every word in wordlist, we add the word to words if information matches
+        #Information matching is bascially finding all the words that match something like, 1 G, A in 3rd spot, no Es, and then it puts them all into words.
+        
         words = []
         for word in self.words:
             if information.matches(word):

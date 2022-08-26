@@ -19,11 +19,11 @@ class Code():
     """ A `Code` represents the outcome of one letter in a wordle game.
 
     For each letter:
-    - Code.miss() conveys that the letter is correctly placed
+    - Code.hit() conveys that the letter is correctly placed
       and at the correct position (i.e. green)
-    - Code.hit()  conveys that the letter is in the word,
+    - Code.mem()  conveys that the letter is in the word,
       but incorrectly placed (i.e. yellow)
-    - Code.mem()  conveys that the letter is not in the word (i.e. grey)
+    - Code.miss()  conveys that the letter is not in the word (i.e. grey)
 
     NOTE: It is considered DANGEROUS AND UNSAFE to use the literal codes `-1`,
     `0` and `1`. Please instead use the static methods `Code.miss()`,
@@ -121,7 +121,7 @@ class Pattern():
                     return False
         return True
 
-    
+        
 class Information():
     """Information maintains a `guess` word and the `Pattern` associated with that guess."""
 
@@ -157,6 +157,13 @@ class Information():
     def matches(self, word):
         """Returns True if `word` could have yielded `self.pat` for guess `self.guess`"""
         return self.pat.matches(self.guess, word)
+
+#Guess is the word, the pattern is the information when you line up each token 
+#Pattern is a sequence of the codes Code.miss, hit and mem
+#These are represented are -1, 0, and 1, and the pattern is a list of those numbers
+#Code.code iterates through the guess and compares
+#If the goal index = the letter, returns hit, if the letter is in goal but not at the index, then it returns mem, and if the letter is not in goal, then returns miss
+
 
 def patterns():
     """constructs a list of all 3^5 possible patterns in no particular order"""

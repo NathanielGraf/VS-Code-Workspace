@@ -215,8 +215,9 @@ def blackjack_game(deck):
         print("PLAYER HAS A BLACKJACK!!!!")
         print("PLAYER WINS!!!!")
         quit() 
- 
-    if dealer_card[0].value == 'A':
+        
+    #Offers insurance if dealer card is showing
+    if dealer_cards[0].value == 'A':
         insuranceyn = str(input("WOULD YOU LIKE TO BUY INSURANCE (Y/N): "))
         if insuranceyn == 'Y': 
             insurancebet = input("HOW MUCH WOULD YOU LIKE TO SIDE BET: ")

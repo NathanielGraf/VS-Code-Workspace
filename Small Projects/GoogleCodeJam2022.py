@@ -1,4 +1,8 @@
 def answer():
+    
+    #Finds the string of earliest dictionary placement for a given string where you can duplicate any letter of a string.
+    #For example, the string "ab" can be duplicated to "aab", "abb", or "aabb" but "aab" is earlier in the dictionary than the others.
+    
     #Defines number of test cases
     T = 2
     
