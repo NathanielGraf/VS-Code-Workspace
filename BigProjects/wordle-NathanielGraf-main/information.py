@@ -105,13 +105,13 @@ class Pattern():
 
         """
         for (idx,code) in enumerate(self.pattern):
-            if code == Code.hit():
-                try:
-                    if word[idx] != guess[idx]:
-                        return False
-                except e:
-                    print(word, idx, guess)
-                    raise e
+            #if code == Code.hit():
+                #try:
+                    #if word[idx] != guess[idx]:
+                        #return False
+                #except e:
+                    #print(word, idx, guess)
+                    #raise e
             if code == Code.miss():
                 if guess[idx] in word:
                     return False

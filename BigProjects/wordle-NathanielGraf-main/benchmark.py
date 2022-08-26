@@ -11,7 +11,7 @@ from solver import *
 def experiment(idx):
     return GameManager(Solver()).play_game()
 
-num_trials = 1000
+num_trials = 10
 guess_counts = []
 for winner in map(experiment, range(num_trials)):
     guess_counts.append(winner)
@@ -20,7 +20,7 @@ print("generating histogram")
 plt.hist(guess_counts, bins=(sorted(list(set(guess_counts + [0,1,2,3,4,5,6])))), density=True)
 plt.xlabel("Number of guesses")
 plt.ylabel("Proportion of words solved")
-fn = "solver_data.pdf"
+fn = "BigProjects/wordle-NathanielGraf-main/solver_data.pdf"
 plt.savefig(fn)
 print("saved to", fn)
 print("expected number of guesses:", float(sum(guess_counts)) / float(num_trials))

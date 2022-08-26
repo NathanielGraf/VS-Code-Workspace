@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
 from random import choice
+import os
 
 class WordList():
     """A list of words. Typically the remaining possible solutions"""
 
-    def __init__(self, word_file = "possible_words.txt", given_words = None):
+    def __init__(self, word_file = 'BigProjects/wordle-NathanielGraf-main/possible_words.txt', given_words = None):
         """construct a list of words by reading from `word_file`
 
         If `given_words` is None, read words from `word_file`, otherwise
@@ -23,6 +24,10 @@ class WordList():
             self.words = [w.strip() for w in self.words]
         else:
             self.words = given_words
+            
+        
+            
+        
 
     def get_random_word(self):
         """returns a random word from the set of words"""

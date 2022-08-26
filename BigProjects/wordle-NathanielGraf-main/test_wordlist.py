@@ -83,7 +83,7 @@ def test_random_refinement():
         words.refine(Information(guess = guess, goal = goal))
         if goal not in words:
             print("Couldn't find word", goal)
-            assert goal in word
+            assert goal in words
 
 ## Checking that refining the word list based on information computed from a
 ## given goal word doesn't accidentally remove the goal word
