@@ -17,10 +17,10 @@ class Solver(Player):
         self.num_guesses = 0
         
         #Creates a list of all possible guesses
-        self.allwords=[]
-        with open('BigProjects/wordle-NathanielGraf-main/words.txt') as fp:
-            self.allwords = fp.readlines()
-        self.allwords = [x.strip() for x in self.allwords]
+        #self.allwords=[]
+        #with open('BigProjects/wordle-NathanielGraf-main/words.txt') as fp:
+        #    self.allwords = fp.readlines()
+        #self.allwords = [x.strip() for x in self.allwords]
 
     #This function finds the next best guess
     def findNextGuess(self):
@@ -39,7 +39,7 @@ class Solver(Player):
         maxentropy = 0
         
         #For every word in the wordlist, pick every other word in the to be the goal word, and see how much information is gained on average
-        for tempguess in self.allwords:
+        for tempguess in self.wordlist:
             
             #Defines the entropy list
             entropylist = []
@@ -88,40 +88,45 @@ class Solver(Player):
         
         #Sets the length of the wordlist to a variable
         length = len(self.wordlist)
+        
+        #Prints to see runtime kinda
         print(length)
+        
+        #If 1 goal word possible, guess it
         if length == 1:
             return self.wordlist[0]
-        #Defines the list of words to be guessed
-        #actualwords = self.wordlist
+        
+        #Defines the max entropy starter
         maxentropy = 0
         
-        #For every word in the wordlist, pick every other word in the to be the goal word, and see how much information is gained on average
-        for w in self.allwords:
+        #Does the same as above solver but optimizes for smallest max list size for a any given goal word for a guess
+        for tempguess in self.wordlist:
             currentmax = 0
             totalmax = 10000
             entropylist = []
-            print(w)
-            for r in self.wordlist:
-                if w == r: 
+            print(tempguess)
+            for tempgoal in self.wordlist:
+                if tempguess == tempgoal: 
                     continue
-                #print(w)
-                #print(r)
+                
                 templist = deepcopy(self.wordlist)
                 
-                #print(templist)
-                templist.refine(Information(r, w))
+                templist.refine(Information(tempgoal, tempguess))
                 
                 if len(templist) > currentmax:
                     currentmax = len(templist)
                 
             if currentmax < totalmax:
                 totalmax = currentmax
-                bestguess = w
-    
+                bestguess = tempguess
+                
+        #Print the best word so I can see it
         print("Best guess: ", bestguess)      
-        print("Max Size: ", totalmax)         
-        return bestguess
- 
+        print("Max Entropy: ", maxentropy)      
+        
+        #Return guess   
+        return bestguess    
+   
     def make_guess(self):
         
         #Guesses trace as first word cause it's the best
@@ -144,6 +149,16 @@ class Solver(Player):
     #Refines the wordlist based on the information given
     def update_knowledge(self, info):
         self.wordlist.refine(info)
+        
+        
+    
+        
+        
+        
+        
+        
+        
+        
         
 class AllLetterSolver(Player):
     def __init__(self): pass
