@@ -1,4 +1,5 @@
 #Package for Regex
+from multiprocessing.connection import Client
 import re
 #Twitter API
 import tweepy
@@ -54,7 +55,7 @@ class TwitterClient(object):
 		else:
 			return 'negative'
 
-	def get_tweets(self, query, count = 10):
+	def get_tweets(self, query, count):
 		'''
 		Main function to fetch tweets and parse them.
 		'''
@@ -63,7 +64,7 @@ class TwitterClient(object):
 
 		try:
 			# call twitter api to fetch tweets
-			fetched_tweets = self.api.search(q = query, count = count)
+			fetched_tweets = self.api.search_tweets(q = query, count = count)
 
 			# parsing tweets one by one
 			for tweet in fetched_tweets:
@@ -85,9 +86,9 @@ class TwitterClient(object):
 
 			# return parsed tweets
 			return tweets
-
-		except tweepy.TweepError as e:
-			# print error (if any)
+		#Commented 1st and 3rd line
+		except tweepy.errors.TweepyException as e:
+		# print error (if any)
 			print("Error : " + str(e))
 
 def main():

@@ -1,21 +1,46 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
-int numtosum = 1234;
+int num;
 int nextdig;
-int sum = 0;
-int main()
+int digarray[100];
+int seendigits[10];
+int i = 0;
+int count = 0;
+int inarray = 1;
+int arethereduplicatedigitsinnumber()
 {
-    //scanf("%d", &numtosum);
-    while(numtosum > 0);
-    {
-        nextdig = numtosum % 10;
-        sum = sum + nextdig;
-        numtosum = numtosum / 10;
-    }
-    printf("%d", sum);
-    return 0;
 
+    printf("Enter a number: ");
+    scanf("%d", &num);
+    while (num > 0)
+    {
+        nextdig = num % 10;
+        digarray[i] = nextdig;
+        num = num / 10;
+        i = i + 1;
+    }
+    while (count < i)
+    {
+        if (seendigits[digarray[count]] == 1)
+        {
+            inarray = 0;
+        }
+        else
+        {
+            seendigits[digarray[count]] = 1;
+        }
+        count = count + 1;
+    }
+    if(inarray == 0)
+    {
+        printf("Duplicate digits found");
+    }
+    else
+    {
+        printf("No duplicate digits found");
+    }
+    
 
 
 

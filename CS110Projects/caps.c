@@ -21,6 +21,7 @@ int main()
     printf("Enter %d words:\n", wordcount);
 
     while (scanf("%s", string) != EOF);
+    
     {
         if(strlen(string) > 3)
         {
@@ -35,7 +36,8 @@ int main()
 
         }
     }
-    printf("The result is: %s
+    outputString[x] = '\0';
+    printf("The result is '%s'\n", outputString);
 
 
 
