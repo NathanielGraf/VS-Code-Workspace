@@ -8,8 +8,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "c:/Users/natha/OneDrive/Documents/GitHub/VS-Code-Workspace/CPCodeForces/9.29CompC",
-      "program": "c:/Users/natha/OneDrive/Documents/GitHub/VS-Code-Workspace/CPCodeForces/9.29CompC/build/Debug/outDebug",
+      "cwd": "c:/Users/natha/OneDrive/Documents/GitHub/VS-Code-Workspace/CS110Projects",
+      "program": "c:/Users/natha/OneDrive/Documents/GitHub/VS-Code-Workspace/CS110Projects/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
