@@ -30,6 +30,7 @@
   ],
   "files.associations": {
     "string": "c",
-    "sstream": "c"
+    "sstream": "c",
+    "string.h": "c"
   }
 }
