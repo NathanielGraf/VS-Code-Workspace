@@ -65,66 +65,106 @@ void binaryEncode(char string[], int size, int integer)
 {
     int i;
     char binaryrep[1000] = "";
-    int binarychar;
+    int binarychar = 0;
     char ch;
-    //printf("TEST GOT HERE");
     while (integer > 0)
     {
         if(integer % 2 == 0)
+        {
             ch = '0';
+        }
         else
+        {
             ch = '1';
+        }
         strncat(binaryrep, &ch, 1);
         integer = integer / 2;
     }
-
     for(i = 0; i < size; i++)
     {
         if(string[i] >= 48 && string[i] <= 57)
         {
             if(binaryrep[binarychar] == '0')
+            {
                 if(string[i] == 48)
+                {
                     string[i] = 57;
+                }
                 else
+                {
                     string[i] = string[i] - 1;
+                }
+            }
             else
+            {
                 if(string[i] == 57)
+                {
                     string[i] = 48;
+                }
                 else
+                {
                     string[i] = string[i] + 1;
+                }
+            }
         }
-        else if(string[i] >= 65 && string[i] <= 90)
+        if(string[i] >= 65 && string[i] <= 90)
         {
             if(binaryrep[binarychar] == '0')
+            {
                 if(string[i] == 65)
+                {
                     string[i] = 90;
+                }
                 else
+                {
                     string[i] = string[i] - 1;
+                }
+            }
             else
+            {
                 if(string[i] == 90)
+                {
                     string[i] = 65;
+                }
                 else
+                {
                     string[i] = string[i] + 1;
+                }
+            }
         }
-
-        else if(string[i] >= 97 && string[i] <= 122)
+        if(string[i] >= 97 && string[i] <= 122)
         {
             if(binaryrep[binarychar] == '0')
+            {
                 if(string[i] == 97)
+                {
                     string[i] = 122;
+                }
                 else
+                {
                     string[i] = string[i] - 1;
+                }
+            }
             else
+            {
                 if(string[i] == 122)
+                {
                     string[i] = 97;
+                }
                 else
+                {
                     string[i] = string[i] + 1;
+                }
+            }
         }
-
         if(binarychar < strlen(binaryrep) - 1)
+        {
             binarychar++;
+        }
         else
+        {
             binarychar = 0;
+        }
     }
 }
 
@@ -132,67 +172,106 @@ void binaryDecode(char string[], int size, int integer)
 {
     int i;
     char binaryrep[1000] = "";
-    int binarychar;
+    int binarychar = 0;
     char ch;
     while (integer > 0)
     {
         if(integer % 2 == 0)
+        {
             ch = '0';
+        }
         else
+        {
             ch = '1';
+        }
         strncat(binaryrep, &ch, 1);
         integer = integer / 2;
     }
-
     for(i = 0; i < size; i++)
     {
         if(string[i] >= 48 && string[i] <= 57)
         {
             if(binaryrep[binarychar] == '0')
+            {
                 if(string[i] == 57)
+                {
                     string[i] = 48;
+                }
                 else
+                {
                     string[i] = string[i] + 1;
+                }
+            }
             else
+            {
                 if(string[i] == 48)
+                {
                     string[i] = 57;
+                }
                 else
+                {
                     string[i] = string[i] - 1;
+                }
+            }
         }
-
-        else if(string[i] >= 65 && string[i] <= 90)
+        if(string[i] >= 65 && string[i] <= 90)
         {
             if(binaryrep[binarychar] == '0')
+            {
                 if(string[i] == 90)
+                {
                     string[i] = 65;
+                }
                 else
+                {
                     string[i] = string[i] + 1;
+                }
+            }
             else
+            {
                 if(string[i] == 65)
+                {
                     string[i] = 90;
+                }
                 else
+                {
                     string[i] = string[i] - 1;
+                }
+            }
         }
-
-        else if(string[i] >= 97 && string[i] <= 122)
+        if(string[i] >= 97 && string[i] <= 122)
         {
             if(binaryrep[binarychar] == '0')
+            {
                 if(string[i] == 122)
+                {
                     string[i] = 97;
+                }
                 else
+                {
                     string[i] = string[i] + 1;
+                }
+            }
             else
+            {
                 if(string[i] == 97)
+                {
                     string[i] = 122;
+                }
                 else
+                {
                     string[i] = string[i] - 1;
+                }
+            }
         }
-
         if(binarychar < strlen(binaryrep) - 1)
+        {
             binarychar++;
+        }
         else
+        {
             binarychar = 0;
-
+        }
     }
 }
 
@@ -218,6 +297,7 @@ int main(int argc, char *argv[])
     char filename[100];
     strcpy(filename, argv[1]);
     fp = fopen(filename, "r");
+    //fp = stdin;
 
     if(fp)
     {   
@@ -247,7 +327,6 @@ int main(int argc, char *argv[])
                 }
             }
         }
-
         while(fscanf(fp, "%s", string) != EOF)
         {
             //printf("|STRING:%s|", string);
@@ -316,9 +395,13 @@ int main(int argc, char *argv[])
                 {
                     repeatnum = modifier[i+1] - '0';
                     if(strcmp(argv[2], "encode") == 0)
+                    {
                         binaryEncode(string, strlen(string), repeatnum);
+                    }
                     else if(strcmp(argv[2], "decode") == 0)
+                    {
                         binaryDecode(string, strlen(string), repeatnum);
+                    }
                 }
                 //printf("END OF LOOP FAM LIT AF\n");
             }

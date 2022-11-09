@@ -31,6 +31,7 @@
   "files.associations": {
     "string": "c",
     "sstream": "c",
-    "string.h": "c"
+    "string.h": "c",
+    "iostream": "cpp"
   }
 }
