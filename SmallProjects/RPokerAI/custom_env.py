@@ -11,7 +11,7 @@ class CustomCardGameEnv(gym.Env):
     def __init__(self):  # Add any necessary parameters here
         super(CustomCardGameEnv, self).__init__()
         # Define the action space and observation space
-        self.action_space = spaces.Discrete(2**52)  # Define based on your card selection strategy
+        self.action_space = spaces.MultiBinary(52)
         
         self.observation_space = spaces.Dict({
             'player_hand': spaces.MultiBinary(52),  # Binary vector for cards in player's hand

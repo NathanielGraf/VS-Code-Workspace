@@ -1,6 +1,9 @@
 import gym
 import numpy as np
+import itertools
 from custom_env import CustomCardGameEnv
+
+
 
 class QLearningAgent:
     def __init__(self, env, learning_rate=0.1, discount_factor=0.99, epsilon=0.1):
@@ -8,18 +11,47 @@ class QLearningAgent:
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
         self.epsilon = epsilon
-        self.action_space = env.action_space.n
+        self.action_space = np.array(self.generate_action_space())
         self.state_space = env.observation_space['player_hand'].shape[0]  # Modify this according to your observation space
 
         # Initialize the Q-table with zeros
-        self.q_table = np.zeros((self.state_space, self.action_space))
+        self.q_table = np.zeros((self.state_space, len(self.action_space)))
+    
+    @staticmethod
+    def generate_action_space():
+        # Define the maximum number of cards the agent can choose (up to 26)
+        max_cards_to_choose = 3
+
+        # Create all possible combinations of up to 26 cards from a 52-card deck
+        action_space = []
+        for num_cards_to_choose in range(1, max_cards_to_choose + 1):
+            # Generate combinations of cards to choose
+            combinations = itertools.combinations(range(52), num_cards_to_choose)
+            
+            # Append combinations to the action space
+            action_space.extend(combinations)
+        
+        # Convert the combinations to lists
+        action_space = [list(cards) for cards in action_space]
+
+        return action_space
 
     def choose_action(self, state):
         # Epsilon-greedy policy
         if np.random.uniform(0, 1) < self.epsilon:
             return self.env.action_space.sample()  # Explore
         else:
-            return np.argmax(self.q_table[state, :])  # Exploit
+            
+            player_hand = np.array(state['player_hand'])
+            dealer_hand = np.array(state['dealer_hand'])
+            community_cards = np.array(state['community_cards'])
+            round_number = state['round_number']
+            
+            
+            state_array = np.concatenate((player_hand, dealer_hand, community_cards, [round_number]))
+            print("State Tuple:", state_array)
+            print("Q-table shape:", self.q_table.shape)
+            return np.argmax(self.q_table[state_array, :])  # Exploit
 
     def update_q_table(self, state, action, reward, next_state):
         best_next_action = np.argmax(self.q_table[next_state, :])
