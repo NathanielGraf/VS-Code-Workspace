@@ -5,8 +5,9 @@ import random
 
 class CustomCardGameEnv(gym.Env):
     
-    cards = [["H", 2], ["H", 3], ["H", 4], ["H", 5], ["H", 6], ["H", 7], ["H", 8], ["H", 9], ["H", 10], ["H", 11], ["H", 12], ["H", 13], ["H", 14], ["S", 2], ["S", 3], ["S", 4], ["S", 5], ["S", 6], ["S", 7], ["S", 8], ["S", 9], ["S", 10], ["S", 11], ["S", 12], ["S", 13], ["S", 14], ["C", 2], ["C", 3], ["C", 4], ["C", 5], ["C", 6], ["C", 7], ["C", 8], ["C", 9], ["C", 10], ["C", 11], ["C", 12], ["C", 13], ["C", 14], ["D", 2], ["D", 3], ["D", 4], ["D", 5], ["D", 6], ["D", 7], ["D", 8], ["D", 9], ["D", 10], ["D", 11], ["D", 12], ["D", 13], ["D", 14]]
-    
+    #cards = [["H", 2], ["H", 3], ["H", 4], ["H", 5], ["H", 6], ["H", 7], ["H", 8], ["H", 9], ["H", 10], ["H", 11], ["H", 12], ["H", 13], ["H", 14], ["S", 2], ["S", 3], ["S", 4], ["S", 5], ["S", 6], ["S", 7], ["S", 8], ["S", 9], ["S", 10], ["S", 11], ["S", 12], ["S", 13], ["S", 14], ["C", 2], ["C", 3], ["C", 4], ["C", 5], ["C", 6], ["C", 7], ["C", 8], ["C", 9], ["C", 10], ["C", 11], ["C", 12], ["C", 13], ["C", 14], ["D", 2], ["D", 3], ["D", 4], ["D", 5], ["D", 6], ["D", 7], ["D", 8], ["D", 9], ["D", 10], ["D", 11], ["D", 12], ["D", 13], ["D", 14]]
+    #Create cards but with tuples:
+    cards = [("H", 2), ("H", 3), ("H", 4), ("H", 5), ("H", 6), ("H", 7), ("H", 8), ("H", 9), ("H", 10), ("H", 11), ("H", 12), ("H", 13), ("H", 14), ("S", 2), ("S", 3), ("S", 4), ("S", 5), ("S", 6), ("S", 7), ("S", 8), ("S", 9), ("S", 10), ("S", 11), ("S", 12), ("S", 13), ("S", 14), ("C", 2), ("C", 3), ("C", 4), ("C", 5), ("C", 6), ("C", 7), ("C", 8), ("C", 9), ("C", 10), ("C", 11), ("C", 12), ("C", 13), ("C", 14), ("D", 2), ("D", 3), ("D", 4), ("D", 5), ("D", 6), ("D", 7), ("D", 8), ("D", 9), ("D", 10), ("D", 11), ("D", 12), ("D", 13), ("D", 14)]
     
     def __init__(self):  # Add any necessary parameters here
         super(CustomCardGameEnv, self).__init__()
@@ -20,7 +21,7 @@ class CustomCardGameEnv(gym.Env):
             'round_number': spaces.Discrete(5)      # Round number
         })
         
-        self.deck = CustomCardGameEnv.shuffle(self.cards)
+        self.deck = self.shuffle(self.cards)
         self.player_hand = [0] * 52
         self.dealer_hand = [0] * 52
         self.community_cards = [0] * 52
@@ -40,11 +41,10 @@ class CustomCardGameEnv(gym.Env):
         random.shuffle(newcards)
         return newcards
         
-    @staticmethod
     def reset(self):
         # Reset the game state and return the initial observation
         
-        deck = CustomCardGameEnv.shuffle(self.cards)
+        deck = self.shuffle(self.cards)
         
         dealer_hand = [0] * 52 
         
@@ -54,6 +54,8 @@ class CustomCardGameEnv(gym.Env):
         
         round_number = 0
         
+        reward = 0
+        
         done = False
         
         return {
@@ -62,8 +64,8 @@ class CustomCardGameEnv(gym.Env):
             'community_cards': community_cards,
             'round_number': round_number,
             'deck': deck,
-            'winner': 'none',
-            'reward': 0,
+            'winner': 'None',
+            'reward': reward,
             'done' : done
         }
     @staticmethod
@@ -74,27 +76,42 @@ class CustomCardGameEnv(gym.Env):
         sorted_hand.sort()
         return sorted_hand
 
-    @staticmethod
-    def step(self):
+    
+    def step(self, action):
         
-        card_to_index_dict = {["H", 2]: 0, ["H", 3]: 1, ["H", 4]: 2, ["H", 5]: 3, ["H", 6]: 4, ["H", 7]: 5, ["H", 8]: 6, ["H", 9]: 7, ["H", 10]: 8, ["H", 11]: 9, ["H", 12]: 10, ["H", 13]: 11, ["H", 14]: 12, ["S", 2]: 13, ["S", 3]: 14, ["S", 4]: 15, ["S", 5]: 16, ["S", 6]: 17, ["S", 7]: 18, ["S", 8]: 19, ["S", 9]: 20, ["S", 10]: 21, ["S", 11]: 22, ["S", 12]: 23, ["S", 13]: 24, ["S", 14]: 25, ["C", 2]: 26, ["C", 3]: 27, ["C", 4]: 28, ["C", 5]: 29, ["C", 6]: 30, ["C", 7]: 31, ["C", 8]: 32, ["C", 9]: 33, ["C", 10]: 34, ["C", 11]: 35, ["C", 12]: 36, ["C", 13]: 37, ["C", 14]: 38, ["D", 2]: 39, ["D", 3]: 40, ["D", 4]: 41, ["D", 5]: 42, ["D", 6]: 43, ["D", 7]: 44, ["D", 8]: 45, ["D", 9]: 46, ["D", 10]: 47, ["D", 11]: 48, ["D", 12]: 49, ["D", 13]: 50, ["D", 14]: 51}
-        index_to_card_dict = {0: ["H", 2], 1: ["H", 3], 2: ["H", 4], 3: ["H", 5], 4: ["H", 6], 5: ["H", 7], 6: ["H", 8], 7: ["H", 9], 8: ["H", 10], 9: ["H", 11], 10: ["H", 12], 11: ["H", 13], 12: ["H", 14], 13: ["S", 2], 14: ["S", 3], 15: ["S", 4], 16: ["S", 5], 17: ["S", 6], 18: ["S", 7], 19: ["S", 8], 20: ["S", 9], 21: ["S", 10], 22: ["S", 11], 23: ["S", 12], 24: ["S", 13], 25: ["S", 14], 26: ["C", 2], 27: ["C", 3], 28: ["C", 4], 29: ["C", 5], 30: ["C", 6], 31: ["C", 7], 32: ["C", 8], 33: ["C", 9], 34: ["C", 10], 35: ["C", 11], 36: ["C", 12], 37: ["C", 13], 38: ["C", 14], 39: ["D", 2], 40: ["D", 3], 41: ["D", 4], 42: ["D", 5], 43: ["D", 6], 44: ["D", 7], 45: ["D", 8], 46: ["D", 9], 47: ["D", 10], 48: ["D", 11], 49: ["D", 12], 50: ["D", 13], 51: ["D", 14]}
+        card_to_index_dict = {
+        ("H", 2): 0, ("H", 3): 1, ("H", 4): 2, ("H", 5): 3, ("H", 6): 4, ("H", 7): 5, ("H", 8): 6, ("H", 9): 7, ("H", 10): 8, ("H", 11): 9,
+        ("H", 12): 10, ("H", 13): 11, ("H", 14): 12, ("S", 2): 13, ("S", 3): 14, ("S", 4): 15, ("S", 5): 16, ("S", 6): 17, ("S", 7): 18,
+        ("S", 8): 19, ("S", 9): 20, ("S", 10): 21, ("S", 11): 22, ("S", 12): 23, ("S", 13): 24, ("S", 14): 25, ("C", 2): 26, ("C", 3): 27,
+        ("C", 4): 28, ("C", 5): 29, ("C", 6): 30, ("C", 7): 31, ("C", 8): 32, ("C", 9): 33, ("C", 10): 34, ("C", 11): 35, ("C", 12): 36,
+        ("C", 13): 37, ("C", 14): 38, ("D", 2): 39, ("D", 3): 40, ("D", 4): 41, ("D", 5): 42, ("D", 6): 43, ("D", 7): 44, ("D", 8): 45,
+        ("D", 9): 46, ("D", 10): 47, ("D", 11): 48, ("D", 12): 49, ("D", 13): 50, ("D", 14): 51}
+        
+        index_to_card_dict = {
+        0: ("H", 2), 1: ("H", 3), 2: ("H", 4), 3: ("H", 5), 4: ("H", 6), 5: ("H", 7), 6: ("H", 8), 7: ("H", 9), 8: ("H", 10), 9: ("H", 11),
+        10: ("H", 12), 11: ("H", 13), 12: ("H", 14), 13: ("S", 2), 14: ("S", 3), 15: ("S", 4), 16: ("S", 5), 17: ("S", 6), 18: ("S", 7),
+        19: ("S", 8), 20: ("S", 9), 21: ("S", 10), 22: ("S", 11), 23: ("S", 12), 24: ("S", 13), 25: ("S", 14), 26: ("C", 2), 27: ("C", 3),
+        28: ("C", 4), 29: ("C", 5), 30: ("C", 6), 31: ("C", 7), 32: ("C", 8), 33: ("C", 9), 34: ("C", 10), 35: ("C", 11), 36: ("C", 12),
+        37: ("C", 13), 38: ("C", 14), 39: ("D", 2), 40: ("D", 3), 41: ("D", 4), 42: ("D", 5), 43: ("D", 6), 44: ("D", 7), 45: ("D", 8),
+        46: ("D", 9), 47: ("D", 10), 48: ("D", 11), 49: ("D", 12), 50: ("D", 13), 51: ("D", 14)}       
+
         
         default_dict_suits = {"H": 0, "S": 0, "C": 0, "D": 0}
         default_dict_values = {2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0}
         
+       
         self.round_number += 1
         
         while True and len(self.deck) > 0:
             card = self.deck.pop()
             self.community_cards[card_to_index_dict[card]] = 0
-            if self.wanted_subset[card_to_index_dict[card]] == 1:
+            if action[card_to_index_dict[card]] == 1:
                 self.player_hand[card_to_index_dict[card]] = 1
                 break
             self.dealer_hand[card_to_index_dict[card]] = 1
             
         if self.round_number == 5:
-            done = True
+            self.done = True
             
             player_card_hand = []
             dealer_card_hand = []
@@ -105,8 +122,8 @@ class CustomCardGameEnv(gym.Env):
                 if self.dealer_hand[i] == 1:
                     dealer_card_hand.append(index_to_card_dict[i])
             
-            player_card_hand = CustomCardGameEnv.sort_hand(player_card_hand)
-            dealer_card_hand = CustomCardGameEnv.sort_hand(dealer_card_hand)
+            player_card_hand = self.sort_hand(player_card_hand)
+            dealer_card_hand = self.sort_hand(dealer_card_hand)
             
             #Create the dicts for the player's hands:
             player_suits = default_dict_suits.copy()
@@ -133,15 +150,13 @@ class CustomCardGameEnv(gym.Env):
                 reward = -1
             else:
                 reward = 0
-        
+        next_state = np.concatenate((self.player_hand, self.dealer_hand, self.community_cards, [self.round_number]))
         return {
-            'player_hand': self.player_hand,
-            'dealer_hand': self.dealer_hand,
-            'community_cards': self.community_cards,
-            'round_number': self.round_number,
-            'deck': self.deck,
-            'done': done,
-            'reward': reward
+            'next_state': next_state,
+            'reward': self.reward,
+            'done': self.done,
+            'deck': self.deck
+            
         }
             
         
