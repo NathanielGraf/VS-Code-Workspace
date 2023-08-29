@@ -43,10 +43,14 @@ class QLearningAgent:
         else:
             
             player_hand = np.array(state['player_hand'])
+            print("Player Hand:", player_hand)
             dealer_hand = np.array(state['dealer_hand'])
+            print("Dealer Hand:", dealer_hand)
             community_cards = np.array(state['community_cards'])
-            round_number = state['round_number']
+            print("Community Cards:", community_cards)
+            round_number = np.array(state['round_number'])
             
+            print()
             
             state_array = np.concatenate((player_hand, dealer_hand, community_cards, [round_number]))
             print("State Tuple:", state_array)
@@ -61,10 +65,10 @@ class QLearningAgent:
 
     def train(self, num_episodes):
         for episode in range(num_episodes):
-            state = env.reset()
+            state = env.reset(CustomCardGameEnv)
             total_reward = 0
 
-            while True:
+            while True: 
                 action = self.choose_action(state)
                 next_state, reward, done, _ = env.step(action)
 

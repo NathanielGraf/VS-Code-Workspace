@@ -19,6 +19,16 @@ class CustomCardGameEnv(gym.Env):
             'community_cards': spaces.MultiBinary(52),  # Binary vector for cards in community cards
             'round_number': spaces.Discrete(5)      # Round number
         })
+        
+        self.deck = CustomCardGameEnv.shuffle(self.cards)
+        self.player_hand = [0] * 52
+        self.dealer_hand = [0] * 52
+        self.community_cards = [0] * 52
+        
+        self.round_number = 0
+        self.done = False
+        self.reward = 0
+        
     @staticmethod
     def shuffle(deck):
     #Deep copy the cards list so that the original is not modified:
@@ -30,12 +40,13 @@ class CustomCardGameEnv(gym.Env):
         random.shuffle(newcards)
         return newcards
         
+    @staticmethod
     def reset(self):
         # Reset the game state and return the initial observation
         
         deck = CustomCardGameEnv.shuffle(self.cards)
         
-        dealer_hand = [0] * 52, 
+        dealer_hand = [0] * 52 
         
         player_hand = [0] * 52
         
@@ -63,7 +74,8 @@ class CustomCardGameEnv(gym.Env):
         sorted_hand.sort()
         return sorted_hand
 
-    def step(self, wanted_subset, deck, player_hand, dealer_hand, community_cards, round_number, done, reward):
+    @staticmethod
+    def step(self):
         
         card_to_index_dict = {["H", 2]: 0, ["H", 3]: 1, ["H", 4]: 2, ["H", 5]: 3, ["H", 6]: 4, ["H", 7]: 5, ["H", 8]: 6, ["H", 9]: 7, ["H", 10]: 8, ["H", 11]: 9, ["H", 12]: 10, ["H", 13]: 11, ["H", 14]: 12, ["S", 2]: 13, ["S", 3]: 14, ["S", 4]: 15, ["S", 5]: 16, ["S", 6]: 17, ["S", 7]: 18, ["S", 8]: 19, ["S", 9]: 20, ["S", 10]: 21, ["S", 11]: 22, ["S", 12]: 23, ["S", 13]: 24, ["S", 14]: 25, ["C", 2]: 26, ["C", 3]: 27, ["C", 4]: 28, ["C", 5]: 29, ["C", 6]: 30, ["C", 7]: 31, ["C", 8]: 32, ["C", 9]: 33, ["C", 10]: 34, ["C", 11]: 35, ["C", 12]: 36, ["C", 13]: 37, ["C", 14]: 38, ["D", 2]: 39, ["D", 3]: 40, ["D", 4]: 41, ["D", 5]: 42, ["D", 6]: 43, ["D", 7]: 44, ["D", 8]: 45, ["D", 9]: 46, ["D", 10]: 47, ["D", 11]: 48, ["D", 12]: 49, ["D", 13]: 50, ["D", 14]: 51}
         index_to_card_dict = {0: ["H", 2], 1: ["H", 3], 2: ["H", 4], 3: ["H", 5], 4: ["H", 6], 5: ["H", 7], 6: ["H", 8], 7: ["H", 9], 8: ["H", 10], 9: ["H", 11], 10: ["H", 12], 11: ["H", 13], 12: ["H", 14], 13: ["S", 2], 14: ["S", 3], 15: ["S", 4], 16: ["S", 5], 17: ["S", 6], 18: ["S", 7], 19: ["S", 8], 20: ["S", 9], 21: ["S", 10], 22: ["S", 11], 23: ["S", 12], 24: ["S", 13], 25: ["S", 14], 26: ["C", 2], 27: ["C", 3], 28: ["C", 4], 29: ["C", 5], 30: ["C", 6], 31: ["C", 7], 32: ["C", 8], 33: ["C", 9], 34: ["C", 10], 35: ["C", 11], 36: ["C", 12], 37: ["C", 13], 38: ["C", 14], 39: ["D", 2], 40: ["D", 3], 41: ["D", 4], 42: ["D", 5], 43: ["D", 6], 44: ["D", 7], 45: ["D", 8], 46: ["D", 9], 47: ["D", 10], 48: ["D", 11], 49: ["D", 12], 50: ["D", 13], 51: ["D", 14]}
@@ -71,26 +83,26 @@ class CustomCardGameEnv(gym.Env):
         default_dict_suits = {"H": 0, "S": 0, "C": 0, "D": 0}
         default_dict_values = {2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0}
         
-        round_number += 1
+        self.round_number += 1
         
-        while True and len(deck) > 0:
-            card = deck.pop()
-            community_cards[card_to_index_dict[card]] = 0
-            if wanted_subset[card_to_index_dict[card]] == 1:
-                player_hand[card_to_index_dict[card]] = 1
+        while True and len(self.deck) > 0:
+            card = self.deck.pop()
+            self.community_cards[card_to_index_dict[card]] = 0
+            if self.wanted_subset[card_to_index_dict[card]] == 1:
+                self.player_hand[card_to_index_dict[card]] = 1
                 break
-            dealer_hand[card_to_index_dict[card]] = 1
+            self.dealer_hand[card_to_index_dict[card]] = 1
             
-        if round_number == 5:
+        if self.round_number == 5:
             done = True
             
             player_card_hand = []
             dealer_card_hand = []
             
-            for i in range(len(player_hand)):
-                if player_hand[i] == 1:
+            for i in range(len(self.player_hand)):
+                if self.player_hand[i] == 1:
                     player_card_hand.append(index_to_card_dict[i])
-                if dealer_hand[i] == 1:
+                if self.dealer_hand[i] == 1:
                     dealer_card_hand.append(index_to_card_dict[i])
             
             player_card_hand = CustomCardGameEnv.sort_hand(player_card_hand)
@@ -111,7 +123,9 @@ class CustomCardGameEnv(gym.Env):
                 dealer_suits[dealer_card_hand[i][0]] += 1
                 dealer_values[dealer_card_hand[i][1]] += 1
             
-            winner = CustomCardGameEnv.winner_check(player_hand, dealer_hand, player_suits, player_values, dealer_suits, dealer_values)
+           
+            
+            winner = CustomCardGameEnv.winner_check(self.player_hand, self.dealer_hand, player_suits, player_values, dealer_suits, dealer_values)
             
             if winner == "Player": 
                 reward = 1
@@ -121,11 +135,11 @@ class CustomCardGameEnv(gym.Env):
                 reward = 0
         
         return {
-            'player_hand': player_hand,
-            'dealer_hand': dealer_hand,
-            'community_cards': community_cards,
-            'round_number': round_number,
-            'deck': deck,
+            'player_hand': self.player_hand,
+            'dealer_hand': self.dealer_hand,
+            'community_cards': self.community_cards,
+            'round_number': self.round_number,
+            'deck': self.deck,
             'done': done,
             'reward': reward
         }
