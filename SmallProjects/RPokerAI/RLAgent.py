@@ -20,7 +20,7 @@ class QLearningAgent:
     @staticmethod
     def generate_action_space():
         # Define the maximum number of cards the agent can choose (up to 26)
-        max_cards_to_choose = 3
+        max_cards_to_choose = 1
 
         # Create all possible combinations of up to 26 cards from a 52-card deck
         action_space = []
@@ -43,21 +43,26 @@ class QLearningAgent:
         else:
             
             player_hand = np.array(state['player_hand'])
+            print("Player Hand:", player_hand)
             #print("Player Hand:", player_hand)
             dealer_hand = np.array(state['dealer_hand'])
+            print("Dealer Hand:", dealer_hand)
             #print("Dealer Hand:", dealer_hand)
-            community_cards = np.array(state['community_cards'])
         
             round_number = np.array(state['round_number'])
-            
+            print("Round Number:", round_number)
            
             
-            state_array = np.concatenate((player_hand, dealer_hand, community_cards, [round_number]))
-            #print("State Tuple:", state_array)
-            #print("Q-table shape:", self.q_table.shape)
+            state_array = np.concatenate((player_hand, dealer_hand, [round_number]))
+            print("Len State Tuple:", len(state_array))
+            print("State Tuple:", state_array)
+            print("Q-table shape:", self.q_table.shape)
             return np.argmax(self.q_table[state_array, :])  # Exploit
 
     def update_q_table(self, state, action, reward, next_state):
+        
+        print("Next State:", next_state)
+        
         best_next_action = np.argmax(self.q_table[next_state, :])
         current_value = self.q_table[state, action]
         learned_value = reward + self.discount_factor * self.q_table[next_state, best_next_action]
@@ -70,7 +75,11 @@ class QLearningAgent:
 
             while True: 
                 action = self.choose_action(state)
-                next_state, reward, done, _ = env.step(action)
+                selected_action = agent.action_space[action]
+                #print("Action Space:", agent.action_space)
+                #print("Action:", action)
+                #print("Selected Action:", selected_action)
+                next_state, reward, done, _ = env.step(selected_action)
 
                 # Update Q-table
                 self.update_q_table(state, action, reward, next_state)

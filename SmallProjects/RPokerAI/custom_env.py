@@ -17,14 +17,12 @@ class CustomCardGameEnv(gym.Env):
         self.observation_space = spaces.Dict({
             'player_hand': spaces.MultiBinary(52),  # Binary vector for cards in player's hand
             'dealer_hand': spaces.MultiBinary(52),  # Binary vector for cards in dealer's hand
-            'community_cards': spaces.MultiBinary(52),  # Binary vector for cards in community cards
             'round_number': spaces.Discrete(5)      # Round number
         })
         
         self.deck = self.shuffle(self.cards)
         self.player_hand = [0] * 52
         self.dealer_hand = [0] * 52
-        self.community_cards = [0] * 52
         
         self.round_number = 0
         self.done = False
@@ -46,11 +44,9 @@ class CustomCardGameEnv(gym.Env):
         
         deck = self.shuffle(self.cards)
         
-        dealer_hand = [0] * 52 
+        dealer_hand = {}
         
-        player_hand = [0] * 52
-        
-        community_cards = [1] * 52
+        player_hand = {}
         
         round_number = 0
         
@@ -61,7 +57,6 @@ class CustomCardGameEnv(gym.Env):
         return {
             'player_hand': player_hand,
             'dealer_hand': dealer_hand,
-            'community_cards': community_cards,
             'round_number': round_number,
             'deck': deck,
             'winner': 'None',
@@ -104,11 +99,11 @@ class CustomCardGameEnv(gym.Env):
         
         while True and len(self.deck) > 0:
             card = self.deck.pop()
-            self.community_cards[card_to_index_dict[card]] = 0
-            if action[card_to_index_dict[card]] == 1:
-                self.player_hand[card_to_index_dict[card]] = 1
+            
+            if card_to_index_dict[card] in action:
+                self.player_hand.append(card_to_index_dict[card])
                 break
-            self.dealer_hand[card_to_index_dict[card]] = 1
+            self.dealer_hand.append(card_to_index_dict[card])
             
         if self.round_number == 5:
             self.done = True
@@ -116,10 +111,9 @@ class CustomCardGameEnv(gym.Env):
             player_card_hand = []
             dealer_card_hand = []
             
-            for i in range(len(self.player_hand)):
-                if self.player_hand[i] == 1:
+            for i in self.player_hand:
                     player_card_hand.append(index_to_card_dict[i])
-                if self.dealer_hand[i] == 1:
+            for i in self.dealer_hand:
                     dealer_card_hand.append(index_to_card_dict[i])
             
             player_card_hand = self.sort_hand(player_card_hand)
@@ -150,10 +144,11 @@ class CustomCardGameEnv(gym.Env):
                 reward = -1
             else:
                 reward = 0
-        next_state = np.concatenate((self.player_hand, self.dealer_hand, self.community_cards, [self.round_number]))
+        
+        next_state = np.concatenate((self.player_hand, self.dealer_hand, [self.round_number]))
         return {
             'next_state': next_state,
-            'reward': self.reward,
+            'reward': reward,
             'done': self.done,
             'deck': self.deck
             
