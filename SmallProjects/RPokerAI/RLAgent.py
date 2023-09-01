@@ -43,18 +43,18 @@ class QLearningAgent:
         else:
             
             player_hand = np.array(state['player_hand'])
-            print("Player Hand:", player_hand)
+            #print("Player Hand:", player_hand)
             dealer_hand = np.array(state['dealer_hand'])
-            print("Dealer Hand:", dealer_hand)
+            #print("Dealer Hand:", dealer_hand)
             community_cards = np.array(state['community_cards'])
-            print("Community Cards:", community_cards)
+        
             round_number = np.array(state['round_number'])
             
-            print()
+           
             
             state_array = np.concatenate((player_hand, dealer_hand, community_cards, [round_number]))
-            print("State Tuple:", state_array)
-            print("Q-table shape:", self.q_table.shape)
+            #print("State Tuple:", state_array)
+            #print("Q-table shape:", self.q_table.shape)
             return np.argmax(self.q_table[state_array, :])  # Exploit
 
     def update_q_table(self, state, action, reward, next_state):
@@ -65,7 +65,7 @@ class QLearningAgent:
 
     def train(self, num_episodes):
         for episode in range(num_episodes):
-            state = env.reset(CustomCardGameEnv)
+            state = env.reset()
             total_reward = 0
 
             while True: 
