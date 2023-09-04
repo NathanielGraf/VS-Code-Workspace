@@ -14,11 +14,11 @@ class DQNAgent:
         self.q_network = self.build_q_network()
         self.target_network = self.build_q_network()
         self.replay_buffer = []  # Experience replay buffer
-        self.batch_size = 32  # Mini-batch size 32
+        self.batch_size = 100  # Mini-batch size 32
 
         #Create input_shape:
         
-        input_shape = 105 
+        input_shape = 105
         
         # Initialize the models with dummy data to create weights
         dummy_input = np.zeros((1, input_shape))  # Replace with your actual input shape
@@ -27,17 +27,24 @@ class DQNAgent:
 
     def build_q_network(self):
         model = tf.keras.Sequential([
-            # Define your neural network layers here
-        ])
+        tf.keras.layers.Input(shape=(105,)),
+        tf.keras.layers.Dense(128, activation='relu'),
+        tf.keras.layers.Dense(128, activation='relu'),
+        tf.keras.layers.Dense(52, activation='linear')  # Output layer with one output neuron per action
+    ])
         model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=self.learning_rate),
                       loss='mean_squared_error')
         return model
 
     def choose_action(self, state):
+
         if np.random.rand() <= self.epsilon:
             return self.env.action_space.sample()  # Explore
         else:
             q_values = self.q_network.predict(np.array([state]))[0]
+            #print("Array:", np.array([state]))
+            
+            #print("QValues:", q_values)
             
             # Apply epsilon-greedy to select multiple cards
             num_cards_to_choose = np.random.randint(1, len(q_values) + 1)  # Choose 1 to len(q_values) cards
@@ -65,6 +72,7 @@ class DQNAgent:
 
         # Sample a mini-batch from the replay buffer
         mini_batch = random.sample(self.replay_buffer, self.batch_size)
+        print("Mini Batch:", mini_batch)
 
         for state, action, reward, next_state, done in mini_batch:
             target = reward
@@ -80,27 +88,46 @@ class DQNAgent:
         self.target_network.set_weights(self.q_network.get_weights())
 
     def play(self, num_episodes):
+        win_count = 0
         for episode in range(num_episodes):
-            
             state = env.reset()
-            #print("State:", state)
             total_reward = 0
+            episode_buffer = []  # Create an empty buffer for this episode
 
             while True:
                 action = self.choose_action(state)
                 result = env.step(action)
-                
-                state = np.array(result['next_state'])
+                next_state = np.array(result['next_state'])
                 reward = result['reward']
                 done = result['done']
                 total_reward += reward
 
+                # Append the experience to the episode buffer
+                episode_buffer.append((state, action, reward, next_state, done))
+
                 if done:
+                    # Calculate the final reward based on the episode outcome
+                    final_reward = 1.0 if total_reward > 0 else -1.0  # Adjust based on your game's rules
+
+                    # Update the rewards in the episode buffer with the final reward
+                    for i in range(len(episode_buffer)):
+                        s, a, _, ns, _ = episode_buffer[i]
+                        episode_buffer[i] = (s, a, final_reward, ns, done)
+
+                    # Add the experiences in the episode buffer to the replay buffer
+                    self.replay_buffer.extend(episode_buffer)
+
+                    if total_reward > 0:
+                        win_count += 1
                     break
+
+                state = next_state  # Update the current state
 
             print(f"Episode {episode + 1}/{num_episodes}, Total Reward: {total_reward}")
             self.update_epsilon()
             self.update_target_network()
+
+        print(f"Win rate: {win_count / num_episodes * 100:.2f}%")
 
 
 # Create your custom card game environment
@@ -113,4 +140,6 @@ agent = DQNAgent(env)
 agent.train()
 
 # Test the agent
-agent.play(num_episodes=50)
+agent.play(num_episodes=1000)
+
+#Print("Replay Buffer:", agent.replay_buffer)

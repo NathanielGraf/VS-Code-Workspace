@@ -86,9 +86,7 @@ class CustomCardGameEnv(gym.Env):
         default_dict_suits = {"H": 0, "S": 0, "C": 0, "D": 0}
         default_dict_values = {2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0}
         
-        reward = 0.0
-        
-        dealer_count = 0
+        reward = 0
         
         #print("Action:", action)
        
@@ -96,28 +94,20 @@ class CustomCardGameEnv(gym.Env):
         
         while True and len(self.deck) > 0:
             card = self.deck.pop()
-            print("Action:", action)
-            print("Card to index dict:", card_to_index_dict[card])
+            
             if action[card_to_index_dict[card]] == 1:
                 self.player_hand[card_to_index_dict[card]] = 1
                 #print("Player's Hand:", self.player_hand)
                 break
             self.dealer_hand[card_to_index_dict[card]] = 1
-            dealer_count += 1
-            #print("Dealer's Hand:", self.dealer_hand)
             
-        
+        #print("Action:", action)
             
         if self.round_number == 5:
             self.done = True
             
             
-            while dealer_count < 8:
-                #print("Dealer's Hand:", self.dealer_hand)
-                #print("Deck", self.deck)
-                card = self.deck.pop()
-                self.dealer_hand[card_to_index_dict[card]] = 1
-                dealer_count += 1
+            
             
             #print("Player's Hand:", self.player_hand)
             #print("Dealer's Hand:", self.dealer_hand)
@@ -134,6 +124,17 @@ class CustomCardGameEnv(gym.Env):
             
             player_card_hand = self.sort_hand(player_card_hand)
             dealer_card_hand = self.sort_hand(dealer_card_hand)
+            
+            while len(dealer_card_hand) < 8:
+                
+                card = self.deck.pop()
+                self.dealer_hand[card_to_index_dict[card]] = 1
+                dealer_card_hand.append(card)
+                #print("Post Dealer's Hand:", dealer_card_hand)
+            
+            
+            
+            
             
             #Create the dicts for the player's hands:
             player_suits = default_dict_suits.copy()
@@ -158,12 +159,14 @@ class CustomCardGameEnv(gym.Env):
             #print("Winner:", winner)
             
             if winner == 1: 
-                reward = 1.0
+                reward = 1
             elif winner == 0:
-                reward = -1.0
+                reward = -1
             else:
-                #print("Why you here?")
-                reward = 0.0
+                print("Why you here?")
+                print("Player's Hand:", player_card_hand)
+                print("Dealer's Hand:", dealer_card_hand)
+                reward = 0
                 
             #print("Reward:", reward)
         
@@ -364,6 +367,10 @@ class CustomCardGameEnv(gym.Env):
             else:
                 winner = 0
                 return winner
+            
+        else:
+            print("Made it to the end: ")
+            
     @staticmethod
     def straight_flush_check(hand):
         high_card = 0
@@ -526,7 +533,6 @@ class CustomCardGameEnv(gym.Env):
         #Finish fixing the pair and high card functions, add high card tiebreak functionality.
     @staticmethod    
     def high_card_check(values):
-        high_card = 0
         for i in values:
             if values[i] == 1:
                 one = i
@@ -547,9 +553,5 @@ class CustomCardGameEnv(gym.Env):
             if values[i] == 1 and i != one and i != two and i != three and i != four:
                 five = i
         
-        if high_card == 0:
-            #print("No High Card")
-            return [0,0,0,0,0]
-        else:     
-            #print("High Card", high_card)
-            return [one, two, three, four, five]
+        
+        return [one, two, three, four, five]
