@@ -1,124 +1,116 @@
-import gym
 import numpy as np
-import itertools
-from custom_env import CustomCardGameEnv
+import random
+import tensorflow as tf  # or any deep learning library
+import custom_env
 
-
-
-class QLearningAgent:
-    def __init__(self, env, learning_rate=0.1, discount_factor=0.99, epsilon=0.1):
+class DQNAgent:
+    def __init__(self, env, epsilon=1.0, epsilon_decay=0.995, min_epsilon=0.01, learning_rate=0.001, discount_factor=0.99):
         self.env = env
+        self.epsilon = epsilon
+        self.epsilon_decay = epsilon_decay
+        self.min_epsilon = min_epsilon
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
-        self.epsilon = epsilon
-        self.action_space = np.array(self.generate_action_space())
-        self.state_space = env.observation_space['player_hand'].shape[0]  # Modify this according to your observation space
+        self.q_network = self.build_q_network()
+        self.target_network = self.build_q_network()
+        self.replay_buffer = []  # Experience replay buffer
+        self.batch_size = 32  # Mini-batch size 32
 
-        # Initialize the Q-table with zeros
-        self.q_table = np.zeros((self.state_space, len(self.action_space)))
-    
-    @staticmethod
-    def generate_action_space():
-        # Define the maximum number of cards the agent can choose (up to 26)
-        max_cards_to_choose = 1
-
-        # Create all possible combinations of up to 26 cards from a 52-card deck
-        action_space = []
-        for num_cards_to_choose in range(1, max_cards_to_choose + 1):
-            # Generate combinations of cards to choose
-            combinations = itertools.combinations(range(52), num_cards_to_choose)
-            
-            # Append combinations to the action space
-            action_space.extend(combinations)
+        #Create input_shape:
         
-        # Convert the combinations to lists
-        action_space = [list(cards) for cards in action_space]
+        input_shape = 105 
+        
+        # Initialize the models with dummy data to create weights
+        dummy_input = np.zeros((1, input_shape))  # Replace with your actual input shape
+        self.q_network(dummy_input)
+        self.target_network(dummy_input)
 
-        return action_space
+    def build_q_network(self):
+        model = tf.keras.Sequential([
+            # Define your neural network layers here
+        ])
+        model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=self.learning_rate),
+                      loss='mean_squared_error')
+        return model
 
     def choose_action(self, state):
-        # Epsilon-greedy policy
-        if np.random.uniform(0, 1) < self.epsilon:
+        if np.random.rand() <= self.epsilon:
             return self.env.action_space.sample()  # Explore
         else:
+            q_values = self.q_network.predict(np.array([state]))[0]
             
-            player_hand = np.array(state['player_hand'])
-            print("Player Hand:", player_hand)
-            #print("Player Hand:", player_hand)
-            dealer_hand = np.array(state['dealer_hand'])
-            print("Dealer Hand:", dealer_hand)
-            #print("Dealer Hand:", dealer_hand)
-        
-            round_number = np.array(state['round_number'])
-            print("Round Number:", round_number)
-           
+            # Apply epsilon-greedy to select multiple cards
+            num_cards_to_choose = np.random.randint(1, len(q_values) + 1)  # Choose 1 to len(q_values) cards
+            chosen_cards = np.argsort(q_values)[-num_cards_to_choose:]  # Choose the cards with the highest Q-values
             
-            state_array = np.concatenate((player_hand, dealer_hand, [round_number]))
-            print("Len State Tuple:", len(state_array))
-            print("State Tuple:", state_array)
-            print("Q-table shape:", self.q_table.shape)
-            return np.argmax(self.q_table[state_array, :])  # Exploit
+            binary_action = np.zeros(len(q_values), dtype=int)  # Ensure the array is of integer type
+            binary_action[chosen_cards] = 1  # Set the chosen card positions to 1
+            
+            # Ensure at least one card is chosen
+            if np.sum(binary_action) == 0:
+                binary_action[np.random.choice(len(q_values))] = 1
+            
+            return binary_action
 
-    def update_q_table(self, state, action, reward, next_state):
         
-        print("Next State:", next_state)
-        
-        best_next_action = np.argmax(self.q_table[next_state, :])
-        current_value = self.q_table[state, action]
-        learned_value = reward + self.discount_factor * self.q_table[next_state, best_next_action]
-        self.q_table[state, action] = (1 - self.learning_rate) * current_value + self.learning_rate * learned_value
+    def update_epsilon(self):
+        self.epsilon = max(self.min_epsilon, self.epsilon * self.epsilon_decay)
 
-    def train(self, num_episodes):
-        for episode in range(num_episodes):
-            state = env.reset()
-            total_reward = 0
+    def remember(self, state, action, reward, next_state, done):
+        self.replay_buffer.append((state, action, reward, next_state, done))
 
-            while True: 
-                action = self.choose_action(state)
-                selected_action = agent.action_space[action]
-                #print("Action Space:", agent.action_space)
-                #print("Action:", action)
-                #print("Selected Action:", selected_action)
-                next_state, reward, done, _ = env.step(selected_action)
+    def train(self):
+        if len(self.replay_buffer) < self.batch_size:
+            return
 
-                # Update Q-table
-                self.update_q_table(state, action, reward, next_state)
+        # Sample a mini-batch from the replay buffer
+        mini_batch = random.sample(self.replay_buffer, self.batch_size)
 
-                total_reward += reward
-                state = next_state
+        for state, action, reward, next_state, done in mini_batch:
+            target = reward
+            if not done:
+                target += self.discount_factor * np.max(self.target_network.predict(np.array([next_state]))[0])
 
-                if done:
-                    break
+            target_q_values = self.q_network.predict(np.array([state]))
+            target_q_values[0][action] = target
 
-            print(f"Episode {episode + 1}/{num_episodes}, Total Reward: {total_reward}")
+            self.q_network.fit(np.array([state]), target_q_values, epochs=1, verbose=0)
 
-        print("Training finished.")
+    def update_target_network(self):
+        self.target_network.set_weights(self.q_network.get_weights())
 
     def play(self, num_episodes):
         for episode in range(num_episodes):
+            
             state = env.reset()
+            #print("State:", state)
             total_reward = 0
 
             while True:
-                action = np.argmax(self.q_table[state, :])
-                next_state, reward, done, _ = env.step(action)
-
+                action = self.choose_action(state)
+                result = env.step(action)
+                
+                state = np.array(result['next_state'])
+                reward = result['reward']
+                done = result['done']
                 total_reward += reward
-                state = next_state
 
                 if done:
                     break
 
             print(f"Episode {episode + 1}/{num_episodes}, Total Reward: {total_reward}")
+            self.update_epsilon()
+            self.update_target_network()
+
 
 # Create your custom card game environment
-env = CustomCardGameEnv()
+env = custom_env.CustomCardGameEnv()
 
-# Create a Q-learning agent
-agent = QLearningAgent(env)
+# Create a DQN agent
+agent = DQNAgent(env)
 
 # Train the agent
-agent.train(num_episodes=1000)
+agent.train()
 
 # Test the agent
-agent.play(num_episodes=10)
+agent.play(num_episodes=50)

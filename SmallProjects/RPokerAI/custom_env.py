@@ -42,27 +42,19 @@ class CustomCardGameEnv(gym.Env):
     def reset(self):
         # Reset the game state and return the initial observation
         
-        deck = self.shuffle(self.cards)
+        self.deck = self.shuffle(self.cards)
+        self.player_hand = [0] * 52
+        self.dealer_hand = [0] * 52
         
-        dealer_hand = {}
+        self.round_number = 0
+        self.done = False
+        self.reward = 0
         
-        player_hand = {}
+        #Concat the player hand, dealer hand, and round number into one array:
+        state = np.concatenate((self.player_hand, self.dealer_hand, [self.round_number]))
         
-        round_number = 0
-        
-        reward = 0
-        
-        done = False
-        
-        return {
-            'player_hand': player_hand,
-            'dealer_hand': dealer_hand,
-            'round_number': round_number,
-            'deck': deck,
-            'winner': 'None',
-            'reward': reward,
-            'done' : done
-        }
+        return state
+    
     @staticmethod
     def sort_hand(hand):
         sorted_hand = []
@@ -94,27 +86,51 @@ class CustomCardGameEnv(gym.Env):
         default_dict_suits = {"H": 0, "S": 0, "C": 0, "D": 0}
         default_dict_values = {2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0}
         
+        reward = 0.0
+        
+        dealer_count = 0
+        
+        #print("Action:", action)
        
         self.round_number += 1
         
         while True and len(self.deck) > 0:
             card = self.deck.pop()
-            
-            if card_to_index_dict[card] in action:
-                self.player_hand.append(card_to_index_dict[card])
+            print("Action:", action)
+            print("Card to index dict:", card_to_index_dict[card])
+            if action[card_to_index_dict[card]] == 1:
+                self.player_hand[card_to_index_dict[card]] = 1
+                #print("Player's Hand:", self.player_hand)
                 break
-            self.dealer_hand.append(card_to_index_dict[card])
+            self.dealer_hand[card_to_index_dict[card]] = 1
+            dealer_count += 1
+            #print("Dealer's Hand:", self.dealer_hand)
+            
+        
             
         if self.round_number == 5:
             self.done = True
             
+            
+            while dealer_count < 8:
+                #print("Dealer's Hand:", self.dealer_hand)
+                #print("Deck", self.deck)
+                card = self.deck.pop()
+                self.dealer_hand[card_to_index_dict[card]] = 1
+                dealer_count += 1
+            
+            #print("Player's Hand:", self.player_hand)
+            #print("Dealer's Hand:", self.dealer_hand)
+            
             player_card_hand = []
             dealer_card_hand = []
             
-            for i in self.player_hand:
-                    player_card_hand.append(index_to_card_dict[i])
-            for i in self.dealer_hand:
-                    dealer_card_hand.append(index_to_card_dict[i])
+            for index, i in enumerate(self.player_hand):
+                if i == 1:
+                    player_card_hand.append(index_to_card_dict[index])
+            for index, i in enumerate(self.dealer_hand):
+                if i == 1:
+                    dealer_card_hand.append(index_to_card_dict[index])
             
             player_card_hand = self.sort_hand(player_card_hand)
             dealer_card_hand = self.sort_hand(dealer_card_hand)
@@ -134,18 +150,25 @@ class CustomCardGameEnv(gym.Env):
                 dealer_suits[dealer_card_hand[i][0]] += 1
                 dealer_values[dealer_card_hand[i][1]] += 1
             
-           
+            #print("Player's Hand:", player_card_hand)
+            #print("Dealer's Hand:", dealer_card_hand)
             
-            winner = CustomCardGameEnv.winner_check(self.player_hand, self.dealer_hand, player_suits, player_values, dealer_suits, dealer_values)
+            winner = CustomCardGameEnv.winner_check(player_card_hand, dealer_card_hand, player_suits, player_values, dealer_suits, dealer_values)
             
-            if winner == "Player": 
-                reward = 1
-            elif winner == "Opponent":
-                reward = -1
+            #print("Winner:", winner)
+            
+            if winner == 1: 
+                reward = 1.0
+            elif winner == 0:
+                reward = -1.0
             else:
-                reward = 0
+                #print("Why you here?")
+                reward = 0.0
+                
+            #print("Reward:", reward)
         
         next_state = np.concatenate((self.player_hand, self.dealer_hand, [self.round_number]))
+        
         return {
             'next_state': next_state,
             'reward': reward,
@@ -169,24 +192,26 @@ class CustomCardGameEnv(gym.Env):
     
     @staticmethod
     def winner_check(player_hand, opponent_hand, player_suits, player_values, opponent_suits, opponent_values):  
+        #print("Player's Hand:", player_hand)
+        #print("Dealer's Hand:", opponent_hand)
         player_holdings = CustomCardGameEnv.straight_flush_check(player_hand)
         opponent_holdings = CustomCardGameEnv.straight_flush_check(opponent_hand)
         if player_holdings != 0 or opponent_holdings != 0:
             if player_holdings > opponent_holdings:
-                winner = "Player"
+                winner = 1
                 return winner
             else:
-                winner = "Opponent"
+                winner = 0
                 return winner
         
         player_holdings = CustomCardGameEnv.four_of_a_kind_check(player_values)
         opponent_holdings = CustomCardGameEnv.four_of_a_kind_check(opponent_values)
         if player_holdings != 0 or opponent_holdings != 0:
             if player_holdings > opponent_holdings:
-                winner = "Player"
+                winner = 1
                 return winner
             else:
-                winner = "Opponent"
+                winner = 0
                 return winner
         
         #Only need to check the house card, since both of them can never have the same house. 
@@ -194,10 +219,10 @@ class CustomCardGameEnv(gym.Env):
         opponent_holdings = CustomCardGameEnv.full_house_check(opponent_values)
         if player_holdings != 0 or opponent_holdings != 0:
             if player_holdings > opponent_holdings:
-                winner = "Player"
+                winner = 1
                 return winner
             else:
-                winner = "Opponent"
+                winner = 0
                 return winner
             
         
@@ -205,10 +230,10 @@ class CustomCardGameEnv(gym.Env):
         opponent_holdings = CustomCardGameEnv.flush_check(opponent_suits, opponent_hand)
         if player_holdings != 0 or opponent_holdings != 0:
             if player_holdings > opponent_holdings:
-                winner = "Player"
+                winner = 1
                 return winner
             else:
-                winner = "Opponent"
+                winner = 0
                 return winner
                 
         
@@ -216,10 +241,10 @@ class CustomCardGameEnv(gym.Env):
         opponent_holdings = CustomCardGameEnv.straight_check(opponent_hand)
         if player_holdings != 0 or opponent_holdings != 0:
             if player_holdings > opponent_holdings:
-                winner = "Player"
+                winner = 1
                 return winner
             else:
-                winner = "Opponent"
+                winner = 0
                 return winner
 
                 
@@ -227,10 +252,10 @@ class CustomCardGameEnv(gym.Env):
         opponent_holdings = CustomCardGameEnv.three_of_a_kind_check(opponent_values)
         if player_holdings != 0 or opponent_holdings != 0:
             if player_holdings > opponent_holdings:
-                winner = "Player"
+                winner = 1
                 return winner
             else:
-                winner = "Opponent"
+                winner = 0
                 return winner
                 
         player_holdings = CustomCardGameEnv.two_pair_check(player_values)
@@ -238,28 +263,28 @@ class CustomCardGameEnv(gym.Env):
         
         if player_holdings[0] != 0 or opponent_holdings[0] != 0:
             if player_holdings[0] > opponent_holdings[0]:
-                winner = "Player"
+                winner = 1
                 return winner
                 
             elif player_holdings[0] == opponent_holdings[0]:
                 if player_holdings[1] > opponent_holdings[1]:
-                    winner = "Player"
+                    winner = 1
                     return winner
                 elif player_holdings[1] == opponent_holdings[1]:
                     if player_holdings[2] > opponent_holdings[2]:
-                        winner = "Player"
+                        winner = 1
                         return winner
                     else:
-                        winner = "Opponent"
+                        winner = 0
                         return winner
                 
                 else:
-                    winner = "Opponent"
+                    winner = 0
                     return winner
                     
             
             else:
-                winner = "Opponent"
+                winner = 0
                 return winner
         
         player_holdings = CustomCardGameEnv.pair_check(player_values)
@@ -267,34 +292,34 @@ class CustomCardGameEnv(gym.Env):
         
         if player_holdings[0] != 0 or opponent_holdings[0] != 0:
             if player_holdings[0] > opponent_holdings[0]:
-                winner = "Player"
+                winner = 1
                 return winner
                 
             elif player_holdings[0] == opponent_holdings[0]:
                 if player_holdings[1] > opponent_holdings[1]:
-                    winner = "Player"
+                    winner = 1
                     return winner
                 elif player_holdings[1] == opponent_holdings[1]:
                     if player_holdings[2] > opponent_holdings[2]:
-                        winner = "Player"
+                        winner = 1
                         return winner
                     elif player_holdings[2] == opponent_holdings[2]:
                         if player_holdings[3] > opponent_holdings[3]:
-                            winner = "Player"
+                            winner = 1
                             return winner
                         else:
-                            winner = "Opponent"
+                            winner = 0
                             return winner
                     else:
-                        winner = "Opponent"
+                        winner = 0
                         return winner
                 
                 else:
-                    winner = "Opponent"
+                    winner = 0
                     return winner
             
             else:
-                winner = "Opponent"
+                winner = 0
                 return winner
         
         
@@ -303,46 +328,47 @@ class CustomCardGameEnv(gym.Env):
         
         if player_holdings[0] != 0 or opponent_holdings[0] != 0:
             if player_holdings[0] > opponent_holdings[0]:
-                winner = "Player"
+                winner = 1
                 return winner
                 
             elif player_holdings[0] == opponent_holdings[0]:
                 if player_holdings[1] > opponent_holdings[1]:
-                    winner = "Player"
+                    winner = 1
                     return winner
                 elif player_holdings[1] == opponent_holdings[1]:
                     if player_holdings[2] > opponent_holdings[2]:
-                        winner = "Player"
+                        winner = 1
                         return winner
                     elif player_holdings[2] == opponent_holdings[2]:
                         if player_holdings[3] > opponent_holdings[3]:
-                            winner = "Player"
+                            winner = 1
                             return winner
                         elif player_holdings[3] == opponent_holdings[3]:
                             if player_holdings[4] > opponent_holdings[4]:
-                                winner = "Player"
+                                winner = 1
                                 return winner
                             else:
-                                winner = "Opponent"
+                                winner = 0
                                 return winner
                         else:
-                            winner = "Opponent"
+                            winner = 0
                             return winner
                     else:
-                        winner = "Opponent"
+                        winner = 0
                         return winner
                 
                 else:
-                    winner = "Opponent"
+                    winner = 0
                     return winner
             
             else:
-                winner = "Opponent"
+                winner = 0
                 return winner
     @staticmethod
     def straight_flush_check(hand):
         high_card = 0
         counter = 0
+        #print("Hand", hand)
         for i in range(len(hand)-1):
             
             if hand[i][0] == hand[i+1][0] and hand[i][1] == hand[i+1][1] - 1:
