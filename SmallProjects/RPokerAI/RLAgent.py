@@ -84,6 +84,8 @@ class DQNAgent:
 
             self.q_network.fit(np.array([state]), target_q_values, epochs=1, verbose=0)
 
+    #Maybe add reward thing for improving poker hand 
+
     def update_target_network(self):
         self.target_network.set_weights(self.q_network.get_weights())
 
