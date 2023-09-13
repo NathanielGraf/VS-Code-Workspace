@@ -142,6 +142,6 @@ agent = DQNAgent(env)
 agent.train()
 
 # Test the agent
-agent.play(num_episodes=1000)
+agent.play(num_episodes=100)
 
 #Print("Replay Buffer:", agent.replay_buffer)

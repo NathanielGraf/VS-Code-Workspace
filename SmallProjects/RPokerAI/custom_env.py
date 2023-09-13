@@ -94,6 +94,8 @@ class CustomCardGameEnv(gym.Env):
         
         while True and len(self.deck) > 0:
             card = self.deck.pop()
+        
+        
             
             if action[card_to_index_dict[card]] == 1:
                 self.player_hand[card_to_index_dict[card]] = 1
@@ -446,6 +448,7 @@ class CustomCardGameEnv(gym.Env):
             #print("Flush", high_card)
             return high_card
     @staticmethod    
+    #WHEELS MORON 
     def straight_check(hand):
         high_card = 0
         counter = 0
