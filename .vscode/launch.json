@@ -2,14 +2,21 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "type": "java",
+      "name": "Main",
+      "request": "launch",
+      "mainClass": "CS200Projects.Lab6.Main",
+      "projectName": "VS-Code-Workspace_faddea67"
+    },
+    {
       "name": "C/C++ Runner: Debug Session",
       "type": "cppdbg",
       "request": "launch",
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "c:/Users/natha/OneDrive/Documents/GitHub/VS-Code-Workspace/CS110Projects",
-      "program": "c:/Users/natha/OneDrive/Documents/GitHub/VS-Code-Workspace/CS110Projects/build/Debug/outDebug",
+      "cwd": "c:/Users/natha/OneDrive/Documents/GitHub/VS-Code-Workspace/CS200Projects",
+      "program": "c:/Users/natha/OneDrive/Documents/GitHub/VS-Code-Workspace/CS200Projects/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
