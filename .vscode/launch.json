@@ -5,6 +5,13 @@
       "type": "java",
       "name": "Main",
       "request": "launch",
+      "mainClass": "CS200Projects.Main",
+      "projectName": "VS-Code-Workspace_227981f1"
+    },
+    {
+      "type": "java",
+      "name": "Main",
+      "request": "launch",
       "mainClass": "CS200Projects.Lab6.Main",
       "projectName": "VS-Code-Workspace_faddea67"
     },
