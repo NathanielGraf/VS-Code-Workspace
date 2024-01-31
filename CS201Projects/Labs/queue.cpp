@@ -1,10 +1,16 @@
 using namespace std;
+#include <iostream>
+#include <string>
 
 template <typename T>
 class queue
 {
 public:
-
+    T *arr;
+    int size;
+    int capacity;
+    int front = 0;
+    int back = 0;
 
     queue() 
     {
@@ -22,38 +28,83 @@ public:
     }
     void enqueue(T x)
     {
-        if (size == capacity)
-        {
-            T *temp = new T[capacity * 2];
-            for (int i = 0; i < size; i++)
-            {
-                temp[i] = arr[i];
-            }
-            delete[] arr;
-            arr = temp;
-            capacity *= 2;
-        }
-        arr[size] = x;
+        
+        arr[back] = x;
+        //cout << "Enqueue: " << arr[back] << endl;
         size++;
+        back++;
     }
     
     T dequeue()
     {
-        if (size == 0)
-        {
-            return -1;
-        }
-        T temp = arr[0];
-        for (int i = 0; i < size - 1; i++)
-        {
-            arr[i] = arr[i + 1];
-        }
+        T temp = arr[front];
+        //cout << "Dequeue: " << arr[front] << endl;
+        front++;
         size--;
         return temp;
+        
+    }
+    T operator[](int i)
+    {
+        return arr[i];
+    }
+    ~queue()
+    {
+        delete[] arr;
     }
 
-private:
-    T *arr;
-    int size;
-    int capacity;
+    queue(const queue &q)
+    {
+        arr = new T[q.capacity];
+        size = q.size;
+        capacity = q.capacity;
+        front = q.front;
+        back = q.back;
+        for (int i = 0; i < size; i++)
+        {
+            arr[i] = q.arr[i];
+        }
+    }
+
+    queue &operator=(const queue &q)
+    {
+        if (this != &q)
+        {
+            delete[] arr;
+            arr = new T[q.capacity];
+            size = q.size;
+            capacity = q.capacity;
+            front = q.front;
+            back = q.back;
+            for (int i = 0; i < size; i++)
+            {
+                arr[i] = q.arr[i];
+            }
+        }
+        return *this;
+    }
+
 };
+
+main()
+{
+    cout <<"Queue of things:" << endl;
+    queue<char> q;
+    q.enqueue('a');
+    q.enqueue('b');
+    q.enqueue('c');
+    //cout << q[0] << endl; // prints 'a'
+    cout << q.dequeue() << endl;
+    cout << q.dequeue() << endl;
+    cout << q.dequeue() << endl;
+
+    queue<int> q2;
+
+    
+    q2.enqueue(1);
+    q2.enqueue(2);
+    q2.enqueue(3);
+    cout << q2.dequeue() << endl;
+    cout << q2.dequeue() << endl;
+    cout << q2.dequeue() << endl;   
+}
