@@ -22,8 +22,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "c:/Users/natha/OneDrive/Documents/GitHub/VS-Code-Workspace/CS200Projects",
-      "program": "c:/Users/natha/OneDrive/Documents/GitHub/VS-Code-Workspace/CS200Projects/build/Debug/outDebug",
+      "cwd": "c:/Users/natha/VS-Code-Workspace/CS201Projects/Labs",
+      "program": "c:/Users/natha/VS-Code-Workspace/CS201Projects/Labs/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
