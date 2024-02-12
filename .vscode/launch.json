@@ -22,8 +22,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "c:/Users/natha/VS-Code-Workspace/CS201Projects/Labs",
-      "program": "c:/Users/natha/VS-Code-Workspace/CS201Projects/Labs/build/Debug/outDebug",
+      "cwd": "c:/Users/natha/VS-Code-Workspace",
+      "program": "c:/Users/natha/VS-Code-Workspace/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
