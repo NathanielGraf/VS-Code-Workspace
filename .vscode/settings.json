@@ -32,7 +32,8 @@
     "string": "c",
     "sstream": "c",
     "string.h": "c",
-    "iostream": "cpp"
+    "iostream": "cpp",
+    "ostream": "cpp"
   },
   "C_Cpp_Runner.msvcWarnings": [
     "/W4",
