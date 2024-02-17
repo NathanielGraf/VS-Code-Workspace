@@ -30,7 +30,7 @@ public:
     //Constructor
     CircularDynamicArray(int s)
     {
-        sz = 0;
+        sz = s;
         cap = s;
         front = 0;
         back = 0;
@@ -173,7 +173,7 @@ public:
     // Method to sort the array
     void Sort() {
         if (sz <= 1) return; // Array is already sorted
-        std::srand(std::time(nullptr)); // Seed the random number generator
+        std::srand(1); // Seed the random number generator
         quicksort(0, sz - 1);
     }
 

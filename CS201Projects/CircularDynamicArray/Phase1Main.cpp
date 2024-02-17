@@ -13,9 +13,9 @@ void foo(CircularDynamicArray<int> x) {
 int main(){
 	CircularDynamicArray<float> C(10);
 	
-    for(int i=0; i<10;i++) C.addEnd(i);
-
-    for (int i=0; i< C.length();i++) cout << C[i] << " ";  cout << endl;
+	//How to get code to add elements like this?
+	for (int i=0; i< C.length();i++) C[i] = i;
+	for (int i=0; i< C.length();i++) cout << C[i] << " ";  cout << endl;
 	// C => "0 1 2 3 4 5 6 7 8 9"
 	C.delFront();
 	for (int i=0; i< C.length();i++) cout << C[i] << " ";  cout << endl;
@@ -37,6 +37,8 @@ int main(){
 	C.delEnd(); C.delFront();C.delEnd();
 	for (int i=0; i< C.length();i++) cout << C[i] << " ";  cout << endl;
 	// C => "3 4 5 6 7 8 100 200"	
+	
+
 
 	CircularDynamicArray<int> A,B;
 	for(int i=0; i<10;i++) A.addEnd(i);
@@ -53,7 +55,6 @@ int main(){
 	// A => "10 0 1 2 3 4 5 6 7 8 9 15 19"
 	cout << "Select is " << A.linearSearch(5) << endl;
 	// A => "10 0 1 2 3 4 5 6 7 8 9 15 19" Search => 6
-    for (int i=0; i< A.length();i++) cout << A[i] << " ";  cout << endl;
 	cout << "Select is " << A.QSelect(3) << endl;
     // Select => 2	
 	
@@ -65,6 +66,7 @@ int main(){
 	A.delFront(); A.delFront();
 	// A => "1 0 1 2 3 4 5 6 7 8 9 10 15 19 11"	  capacity => 32
 
+	//Why does this print???
 	foo(A);
 	for (int i=0; i< A.length();i++) cout << A[i] << " ";  cout << endl;
 	// A => "1 0 1 2 3 4 5 6 7 8 9 10 15 19 11"
