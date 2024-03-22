@@ -88,8 +88,8 @@ class CardGameEnv:
         
         action = self.decode_card(action)
         
-        print("action:", action)
-        print("deck:", self.deck)
+        #print("action:", action)
+        #print("deck:", self.deck)
         
         if self.round >= 5:
             # If the game should already have ended, return the current state, 0 reward, True for 'done', and an optional info
@@ -540,8 +540,8 @@ class PolicyNetwork(nn.Module):
         x = F.relu(self.fc1(x))  # Activation function for first layer
         x = F.relu(self.fc2(x))  # Activation function for second layer
         x = F.relu(self.fc3(x))  # Activation function for third layer
-        print("actionhead", self.action_head(x))
-        print("action_probs", F.softmax(self.action_head(x), dim=-1))
+        #print("actionhead", self.action_head(x))
+        #print("action_probs", F.softmax(self.action_head(x), dim=-1))
         
         raw_action_logits = self.action_head(x)
         stabilized_logits = raw_action_logits - raw_action_logits.max(dim=1, keepdim=True).values
@@ -571,15 +571,21 @@ class PolicyNetwork(nn.Module):
                 # Ensure state is a torch Tensor
                 state_tensor = torch.FloatTensor(state).unsqueeze(0)  # Add a batch dimension
                 
-                print("state_tensor shape:", state_tensor.shape)
-                print("state_tensor:", state_tensor)
+                #print("state_tensor shape:", state_tensor.shape)
+                #print("state_tensor:", state_tensor)
                 
                 # Convert state to tensor and get action probabilities and value estimate
                 action_probs, state_value = policy_network(state_tensor)
                 
+                
+                #print("action_probs:", action_probs)
+                
+                #Need to add this prob before masking so we don't underflow, this will still be masked so we don't select unavailable cards.
+                action_probs = action_probs + 1e-35
+                
                 #Looks good
-                print("action_probs shape:", action_probs.shape)
-                print("action_probs:", action_probs)
+                #print("action_probs shape:", action_probs.shape)
+                #print("edited_action_probs:", action_probs)
                 
                 #print("state_tensor shape:", state_tensor.shape)
                 #print("state_tensor:", state_tensor)
@@ -593,17 +599,17 @@ class PolicyNetwork(nn.Module):
                 deck_state = state[-52:]  # Assuming the last 52 elements of the state represent the deck
                 mask = torch.FloatTensor(deck_state).unsqueeze(0)
                 
-                print("mask", mask)
+                #print("mask", mask)
 
                 # Apply the mask to action probabilities
                 masked_action_probs = action_probs * mask
                 
                 # Define a small constant, ensuring it's of the same dtype as masked_action_probs
-                epsilon = torch.tensor(1e-20, dtype=masked_action_probs.dtype, device=masked_action_probs.device)
+                #epsilon = torch.tensor(1e-20, dtype=masked_action_probs.dtype, device=masked_action_probs.device)
 
 
-                print("masked_action_probs shape:", masked_action_probs.shape)
-                print("masked_action_probs:", masked_action_probs)
+                #print("masked_action_probs shape:", masked_action_probs.shape)
+                #print("masked_action_probs:", masked_action_probs)
                 
                 
                 
@@ -613,11 +619,11 @@ class PolicyNetwork(nn.Module):
 
                 # Apply softmax to get normalized probabilities
                 
-                normalized_action_probs = (masked_action_probs) / (masked_action_probs.sum() + epsilon)
+                normalized_action_probs = (masked_action_probs) / (masked_action_probs.sum())
 
                 
-                print("Sum of probabilities (with epsilon):", masked_action_probs.sum())
-                print("Normalized action probabilities:", normalized_action_probs)
+                #print("Sum of probabilities (with epsilon):", masked_action_probs.sum())
+                #print("Normalized action probabilities:", normalized_action_probs)
                 
                 #print("normalized_action_probs shape:", normalized_action_probs.shape)
                 #print("normalized_action_probs:", normalized_action_probs)
@@ -625,7 +631,7 @@ class PolicyNetwork(nn.Module):
                 # Sample an action based on the masked and normalized probabilities
                 action = torch.multinomial(normalized_action_probs, 1).item()
                 
-                print("action:", action)
+                #print("action:", action)
                 
                 
                 # Take action in the environment
