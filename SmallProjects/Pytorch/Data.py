@@ -5,15 +5,22 @@ import numpy as np
 #import torchrl
 import random
 import torch.nn.functional as F
-from treys import Card
-from treys import Evaluator
+
+
+
+default_dict_suits = {"H": 0, "S": 0, "C": 0, "D": 0}
+default_dict_values = {2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0}
+hearts = [["H", 2], ["H", 3], ["H", 4], ["H", 5], ["H", 6], ["H", 7], ["H", 8], ["H", 9], ["H", 10], ["H", 11], ["H", 12], ["H", 13], ["H", 14]]
+clubs = [["C", 2], ["C", 3], ["C", 4], ["C", 5], ["C", 6], ["C", 7], ["C", 8], ["C", 9], ["C", 10], ["C", 11], ["C", 12], ["C", 13], ["C", 14]]
+spades = [["S", 2], ["S", 3], ["S", 4], ["S", 5], ["S", 6], ["S", 7], ["S", 8], ["S", 9], ["S", 10], ["S", 11], ["S", 12], ["S", 13], ["S", 14]]
+diamonds = [["D", 2], ["D", 3], ["D", 4], ["D", 5], ["D", 6], ["D", 7], ["D", 8], ["D", 9], ["D", 10], ["D", 11], ["D", 12], ["D", 13], ["D", 14]]
 
 class CardGameEnv:
     def __init__(self):
+        #self.cards = [["H", 2], ["H", 3], ["H", 4], ["H", 5], ["H", 6], ["H", 7], ["H", 8], ["H", 9], ["H", 10], ["H", 11], ["H", 12], ["H", 13], ["H", 14], ["S", 2], ["S", 3], ["S", 4], ["S", 5], ["S", 6], ["S", 7], ["S", 8], ["S", 9], ["S", 10], ["S", 11], ["S", 12], ["S", 13], ["S", 14], ["C", 2], ["C", 3], ["C", 4], ["C", 5], ["C", 6], ["C", 7], ["C", 8], ["C", 9], ["C", 10], ["C", 11], ["C", 12], ["C", 13], ["C", 14], ["D", 2], ["D", 3], ["D", 4], ["D", 5], ["D", 6], ["D", 7], ["D", 8], ["D", 9], ["D", 10], ["D", 11], ["D", 12], ["D", 13], ["D", 14]]
         
         #Create a deck of tuples of cards: 
-        self.cards = ['Ah', 'Kh', 'Qh', 'Jh', 'Th', '9h', '8h', '7h', '6h', '5h', '4h', '3h', '2h', 'Ad', 'Kd', 'Qd', 'Jd', 'Td', '9d', '8d', '7d', '6d', '5d', '4d', '3d', '2d', 'Ac', 'Kc', 'Qc', 'Jc', 'Tc', '9c', '8c', '7c', '6c', '5c', '4c', '3c', '2c', 'As', 'Ks', 'Qs', 'Js', 'Ts', '9s', '8s', '7s', '6s', '5s', '4s', '3s', '2s']
-        #self.deck = self.shuffle_deck(self.cards.copy())
+        self.cards = [("H", 2), ("H", 3), ("H", 4), ("H", 5), ("H", 6), ("H", 7), ("H", 8), ("H", 9), ("H", 10), ("H", 11), ("H", 12), ("H", 13), ("H", 14), ("S", 2), ("S", 3), ("S", 4), ("S", 5), ("S", 6), ("S", 7), ("S", 8), ("S", 9), ("S", 10), ("S", 11), ("S", 12), ("S", 13), ("S", 14), ("C", 2), ("C", 3), ("C", 4), ("C", 5), ("C", 6), ("C", 7), ("C", 8), ("C", 9), ("C", 10), ("C", 11), ("C", 12), ("C", 13), ("C", 14), ("D", 2), ("D", 3), ("D", 4), ("D", 5), ("D", 6), ("D", 7), ("D", 8), ("D", 9), ("D", 10), ("D", 11), ("D", 12), ("D", 13), ("D", 14)]
         self.reset()
         
     def shuffle_deck(self, deck):
@@ -40,21 +47,29 @@ class CardGameEnv:
         # This is just a placeholder; you'll need to design this based on your neural network's output layer
         action_space = 52  # 52 cards in the deck
         return action_space
-
+    
     def encode_cards(self, cards):
-        # Encodes a list of card strings into a list of indices
+        # Assuming 'cards' is a list of tuples like [("H", 10), ("D", 3)], where the first element is the suit and the second is the rank
+        # The deck is a standard 52-card deck
+        encoded = [0] * 52  # 52 cards in a standard deck
+        suit_order = {"H": 0, "D": 13, "C": 26, "S": 39}  # Assign each suit a starting index
+        for card in cards:
+            suit, rank = card
+            index = suit_order[suit] + (rank - 2)  # Subtract 2 because the smallest rank is 2, not 0
+            encoded[index] = 1
+        return encoded
+    
+    def decode_card(self, encoded_card):
+        # Assuming 'encoded_cards' is a list of 52 binary values, where 1 indicates the presence of a card and 0 indicates absence
+        suit_order = {0: "H", 1: "D", 2: "C", 3: "S"}
         
-        # Maps card strings to their indices
-        card_to_index = {card: i for i, card in enumerate(self.cards)}
 
-        return [card_to_index[card] for card in cards]
-
-    def decode_cards(self, indexes):
-        # Maps indices back to card strings
-        index_to_card = {i: card for i, card in enumerate(self.cards)}
-        
-        # Decodes a single index back into its card string
-        return [index_to_card[index] for index in indexes]
+            
+        suit = suit_order[encoded_card // 13]
+        rank = (encoded_card % 13) + 2  # Add 2 to get the rank, since the smallest rank is 2
+               
+                
+        return (suit, rank)
 
     def reset(self):
         self.deck = self.shuffle_deck(self.cards.copy())
@@ -66,8 +81,12 @@ class CardGameEnv:
     def step(self, action):
         # The action could be a list of cards (subsets) the agent selects
         # For simplicity, we assume the action is a single card represented by a tuple, e.g., ("H", 10)
+
+        # Check if the deck is empty
+   
         
-        action = self.decode_cards(action)
+        
+        action = self.decode_card(action)
         
         #print("action:", action)
         #print("deck:", self.deck)
@@ -136,15 +155,31 @@ class CardGameEnv:
     def check_win_condition(self):
         # Check if the player's hand is better than the opponent's hand
         
-        evaluator = Evaluator()
-        player_hand = self.sort_hand(self.player_hand)
+        player_hand = self.player_hand.copy()
         
         
-        hand = [Card.new('Ah'), Card.new('Kh'), Card.new('Qh'), Card.new('Jh'), Card.new('Th')]
-        board = []
-        print(evaluator.evaluate(board, hand))
+        opponent_hand = self.opponent_hand.copy()   
+        player_hand = self.sort_hand(player_hand)
+        opponent_hand = self.sort_hand(opponent_hand)
+    
+        #Create the dicts for the player's hands:
+        player_suits = default_dict_suits.copy()
+        player_values = default_dict_values.copy()
+    
+        opponent_suits = default_dict_suits.copy()
+        opponent_values = default_dict_values.copy()
         
-      
+        #Fill the dicts with the values from the player's hands:
+        #print("player_hand:", player_hand)
+        for i in range(len(player_hand)):
+            player_suits[player_hand[i][0]] += 1
+            player_values[player_hand[i][1]] += 1
+            
+        #print("player_values:", player_values)
+        
+        for i in range(len(opponent_hand)):
+            opponent_suits[opponent_hand[i][0]] += 1
+            opponent_values[opponent_hand[i][1]] += 1
             
         winner = self.winner_check(player_hand, opponent_hand, player_suits, player_values, opponent_suits, opponent_values)
         if winner == "Player":
@@ -152,7 +187,343 @@ class CardGameEnv:
         else:
             return False
         
-    
+    def winner_check(self, player_hand, opponent_hand, player_suits, player_values, opponent_suits, opponent_values):  
+        player_holdings = self.straight_flush_check(player_hand)
+        opponent_holdings = self.straight_flush_check(opponent_hand)
+        if player_holdings != 0 or opponent_holdings != 0:
+            if player_holdings > opponent_holdings:
+                winner = "Player"
+                return winner
+            else:
+                winner = "Opponent"
+                return winner
+        
+        player_holdings = self.four_of_a_kind_check(player_values)
+        opponent_holdings = self.four_of_a_kind_check(opponent_values)
+        if player_holdings != 0 or opponent_holdings != 0:
+            if player_holdings > opponent_holdings:
+                winner = "Player"
+                return winner
+            else:
+                winner = "Opponent"
+                return winner
+        
+        #Only need to check the house card, since both of them can never have the same house. 
+        player_holdings = self.full_house_check(player_values)
+        opponent_holdings = self.full_house_check(opponent_values)
+        if player_holdings != 0 or opponent_holdings != 0:
+            if player_holdings > opponent_holdings:
+                winner = "Player"
+                return winner
+            else:
+                winner = "Opponent"
+                return winner
+            
+        
+        player_holdings = self.flush_check(player_suits, player_hand)
+        opponent_holdings = self.flush_check(opponent_suits, opponent_hand)
+        if player_holdings != 0 or opponent_holdings != 0:
+            if player_holdings > opponent_holdings:
+                winner = "Player"
+                return winner
+            else:
+                winner = "Opponent"
+                return winner
+                
+        
+        player_holdings = self.straight_check(player_hand)
+        opponent_holdings = self.straight_check(opponent_hand)
+        if player_holdings != 0 or opponent_holdings != 0:
+            if player_holdings > opponent_holdings:
+                winner = "Player"
+                return winner
+            else:
+                winner = "Opponent"
+                return winner
+
+                
+        player_holdings = self.three_of_a_kind_check(player_values)
+        opponent_holdings = self.three_of_a_kind_check(opponent_values)
+        if player_holdings != 0 or opponent_holdings != 0:
+            if player_holdings > opponent_holdings:
+                winner = "Player"
+                return winner
+            else:
+                winner = "Opponent"
+                return winner
+                
+        player_holdings = self.two_pair_check(player_values)
+        opponent_holdings = self.two_pair_check(opponent_values)
+        
+        if player_holdings[0] != 0 or opponent_holdings[0] != 0:
+            if player_holdings[0] > opponent_holdings[0]:
+                winner = "Player"
+                
+            elif player_holdings[0] == opponent_holdings[0]:
+                if player_holdings[1] > opponent_holdings[1]:
+                    winner = "Player"
+                elif player_holdings[1] == opponent_holdings[1]:
+                    if player_holdings[2] > opponent_holdings[2]:
+                        winner = "Player"
+                    else:
+                        winner = "Opponent"
+                
+                else:
+                    winner = "Opponent"
+                    
+            
+            else:
+                winner = "Opponent"
+        
+        player_holdings = self.pair_check(player_values)
+        opponent_holdings = self.pair_check(opponent_values)
+        
+        if player_holdings[0] != 0 or opponent_holdings[0] != 0:
+            if player_holdings[0] > opponent_holdings[0]:
+                winner = "Player"
+                
+            elif player_holdings[0] == opponent_holdings[0]:
+                if player_holdings[1] > opponent_holdings[1]:
+                    winner = "Player"
+                elif player_holdings[1] == opponent_holdings[1]:
+                    if player_holdings[2] > opponent_holdings[2]:
+                        winner = "Player"
+                    elif player_holdings[2] == opponent_holdings[2]:
+                        if player_holdings[3] > opponent_holdings[3]:
+                            winner = "Player"
+                        else:
+                            winner = "Opponent"
+                    else:
+                        winner = "Opponent"
+                
+                else:
+                    winner = "Opponent"
+            
+            else:
+                winner = "Opponent"
+        
+        
+        player_holdings = self.high_card_check(player_values)
+        opponent_holdings = self.high_card_check(opponent_values)
+        
+        if player_holdings[0] != 0 or opponent_holdings[0] != 0:
+            if player_holdings[0] > opponent_holdings[0]:
+                winner = "Player"
+                
+            elif player_holdings[0] == opponent_holdings[0]:
+                if player_holdings[1] > opponent_holdings[1]:
+                    winner = "Player"
+                elif player_holdings[1] == opponent_holdings[1]:
+                    if player_holdings[2] > opponent_holdings[2]:
+                        winner = "Player"
+                    elif player_holdings[2] == opponent_holdings[2]:
+                        if player_holdings[3] > opponent_holdings[3]:
+                            winner = "Player"
+                        elif player_holdings[3] == opponent_holdings[3]:
+                            if player_holdings[4] > opponent_holdings[4]:
+                                winner = "Player"
+                            else:
+                                winner = "Opponent"
+                        else:
+                            winner = "Opponent"
+                    else:
+                        winner = "Opponent"
+                
+                else:
+                    winner = "Opponent"
+            
+            else:
+                winner = "Opponent"
+        
+    def straight_flush_check(self, hand):
+        high_card = 0
+        counter = 0
+        for i in range(len(hand)-1):
+            
+            if hand[i][0] == hand[i+1][0] and hand[i][1] == hand[i+1][1] - 1:
+                counter += 1
+
+            else:
+                counter = 0
+        
+            if counter >= 4:
+                high_card = max(high_card, hand[i+1][1])
+                
+        
+        if high_card == 0:
+            #print("No Straight Flush")
+            return 0
+        else:
+            #print("Straight Flush", high_card)
+            return high_card
+        
+    def four_of_a_kind_check(self, values):
+        high_card = 0
+        for i in values:
+            if values[i] == 4:
+                high_card = i
+        
+        if high_card == 0:
+            #print("No Four of a Kind")
+            return 0
+        else:     
+            #print("Four of a Kind", high_card)
+            return high_card
+            
+    def full_house_check(self, values):
+        house_card = 0
+        full_card = 0
+        for i in values:
+            if values[i] >= 3:
+                house_card = i
+        
+        for i in values:
+            if i == house_card:
+                continue
+            elif values[i] >= 2:
+                full_card = i
+        
+        if house_card == 0 or full_card == 0:
+            #print("No Full House")
+            return 0
+            
+        else:     
+            #print("Full House", house_card, "full of", full_card)
+            return house_card
+        
+    def flush_check(self, suits, cards):
+        high_card = 0
+        for i in suits:
+            if suits[i] >= 5:
+                flush_high_card = 0
+                for j in range(len(cards)):
+                    if cards[j][0] == i:
+                        flush_high_card = max(flush_high_card, cards[j][1])
+                high_card = max(high_card, flush_high_card)
+        
+        if high_card == 0:
+            #print("No Flush")
+            return 0
+        else:
+            #print("Flush", high_card)
+            return high_card
+        
+    def straight_check(self, hand):
+        high_card = 0
+        counter = 0
+        for i in range(len(hand)-1):
+            
+            if hand[i][1] == hand[i+1][1] - 1:
+                counter += 1
+
+            else:
+                counter = 0
+        
+            if counter >= 4:
+                high_card = max(high_card, hand[i+1][1])
+                
+        
+        if high_card == 0:
+            #print("No Straight")
+            return 0
+        else:
+            #print("Straight", high_card)
+            return high_card
+
+    def three_of_a_kind_check(self, values):
+        high_card = 0
+        for i in values:
+            if values[i] == 3:
+                high_card = i
+        
+        if high_card == 0:
+            #print("No Three of a Kind")
+            return 0
+        else:     
+            #print("Three of a Kind", high_card)
+            return high_card
+
+    def two_pair_check(self, values):
+        top_pair = 0
+        bottom_pair = 0
+        for i in values:
+            if values[i] >= 2:
+                top_pair = i
+                
+        for i in values:
+            if values[i] >= 2 and i != top_pair:
+                bottom_pair = i
+        
+        for i in values: 
+            if values[i] <= 2 and i != top_pair and i != bottom_pair: 
+                high_card = i
+        
+        if top_pair == 0 or bottom_pair == 0:
+            #print("No Two Pair")
+            return [0, 0, 0]
+        else:     
+            #print("Two Pair", top_pair, "and", bottom_pair)
+            return [top_pair, bottom_pair, high_card]
+
+    def pair_check(self, values):
+        high_card = 0
+        for i in values:
+            if values[i] >= 2:
+                high_card = i
+        
+        for i in values:
+            if values[i] == 1 and i != high_card:
+                one = i
+                
+        for i in values:
+            if values[i] == 1 and i != high_card and i != one:
+                two = i
+                
+        for i in values:
+            if values[i] == 1 and i != high_card and i != one and i != two:
+                three = i
+        
+        
+        
+        if high_card == 0:
+            #print("No Pair")
+            return [0, 0, 0, 0]
+        else:     
+            #print("Pair", high_card)
+            return [high_card, one, two, three]
+        
+        #Finish fixing the pair and high card functions, add high card tiebreak functionality.
+        
+    def high_card_check(values):
+        high_card = 0
+        for i in values:
+            if values[i] == 1:
+                one = i
+                
+        for i in values:
+            if values[i] == 1 and i != one:
+                two = i
+                
+        for i in values:
+            if values[i] == 1  and i != one and i != two:
+                three = i
+                
+        for i in values:
+            if values[i] == 1 and i != one and i != two and i != three :
+                four = i
+                
+        for i in values:
+            if values[i] == 1 and i != one and i != two and i != three and i != four:
+                five = i
+        
+        if high_card == 0:
+            #print("No High Card")
+            return [0,0,0,0,0]
+        else:     
+            #print("High Card", high_card)
+            return [one, two, three, four, five]
+            
+        
         
 class PolicyNetwork(nn.Module):
     def __init__(self, observation_space, action_space):
