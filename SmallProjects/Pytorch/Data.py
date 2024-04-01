@@ -8,6 +8,10 @@ import torch.nn.functional as F
 
 
 
+
+
+
+
 default_dict_suits = {"H": 0, "S": 0, "C": 0, "D": 0}
 default_dict_values = {2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0}
 hearts = [["H", 2], ["H", 3], ["H", 4], ["H", 5], ["H", 6], ["H", 7], ["H", 8], ["H", 9], ["H", 10], ["H", 11], ["H", 12], ["H", 13], ["H", 14]]
@@ -40,6 +44,8 @@ class CardGameEnv:
         observation = round_normalized + player_hand_encoded + opponent_hand_encoded + deck_encoded
         #print("observation:", observation)
         return observation
+
+
     
     def get_action_space(self):
         
@@ -181,22 +187,26 @@ class CardGameEnv:
             opponent_suits[opponent_hand[i][0]] += 1
             opponent_values[opponent_hand[i][1]] += 1
             
-        winner = self.winner_check(player_hand, opponent_hand, player_suits, player_values, opponent_suits, opponent_values)
-        if winner == "Player":
+        
+        player_hand = [('C', 2), ('C', 3), ('C', 4), ('C', 5), ('C', 14)]
+        print("player_hand:", player_hand)
+            
+        player_strength = self.get_hand_strength(player_hand, player_suits, player_values)
+        opponent_strength = self.get_hand_strength(opponent_hand, opponent_suits, opponent_values)
+        
+        print("player_strength:", player_strength)
+        print("opponent_strength:", opponent_strength)
+        
+        if player_strength > opponent_strength:
             return True
         else:
             return False
         
-    def winner_check(self, player_hand, opponent_hand, player_suits, player_values, opponent_suits, opponent_values):  
-        player_holdings = self.straight_flush_check(player_hand)
-        opponent_holdings = self.straight_flush_check(opponent_hand)
-        if player_holdings != 0 or opponent_holdings != 0:
-            if player_holdings > opponent_holdings:
-                winner = "Player"
-                return winner
-            else:
-                winner = "Opponent"
-                return winner
+    def get_hand_strength(self, hand, suits, values):  
+        player_holdings = self.straight_flush_check(hand)
+        if player_holdings != 0:
+            return player_holdings
+            
         
         player_holdings = self.four_of_a_kind_check(player_values)
         opponent_holdings = self.four_of_a_kind_check(opponent_values)
@@ -338,37 +348,47 @@ class CardGameEnv:
     def straight_flush_check(self, hand):
         high_card = 0
         counter = 0
+        #Check for straight flush
         for i in range(len(hand)-1):
+            #print(hand[i][0], hand[i+1][0], hand[i][1], hand[i+1][1])
             
             if hand[i][0] == hand[i+1][0] and hand[i][1] == hand[i+1][1] - 1:
                 counter += 1
+                
+            #Check for the special case of the Ace being the lowest card in the straight
+            
+            elif counter == 3 and hand[i][0] == hand[i+1][0] and hand[i][1] == 5 and hand[i+1][1] == 14:
+                high_card = hand[i][1]
 
             else:
                 counter = 0
         
             if counter >= 4:
                 high_card = max(high_card, hand[i+1][1])
-                
         
         if high_card == 0:
             #print("No Straight Flush")
             return 0
         else:
             #print("Straight Flush", high_card)
-            return high_card
+            return 15-high_card
         
     def four_of_a_kind_check(self, values):
         high_card = 0
         for i in values:
             if values[i] == 4:
                 high_card = i
+                
+                for i in values: 
+                    if values[i] == 1:
+                        kicker = i
         
         if high_card == 0:
             #print("No Four of a Kind")
             return 0
         else:     
             #print("Four of a Kind", high_card)
-            return high_card
+            return 10 + (14-high_card)*12 + 14- kicker
             
     def full_house_check(self, values):
         house_card = 0
@@ -662,14 +682,23 @@ class PolicyNetwork(nn.Module):
         
         print("Training complete.")
         print("Win rates:", win_rates)
+        
+        
 
 
 # Initialize your environment and policy network
 env = CardGameEnv()
+
+# Initialize the deck
+deck = env.init_deck()
+
+# For verification, print out the encoded cards in binary format
+for card in deck:
+    print(bin(card))
 observation_space = env.get_observation_space()
 action_space = env.get_action_space()
 policy_network = PolicyNetwork(observation_space, action_space)
 optimizer = optim.Adam(policy_network.parameters(), lr=1e-3)
 
 # Train the agent
-PolicyNetwork.train(env, policy_network, episodes=10000, optimizer=optimizer)
+PolicyNetwork.train(env, policy_network, episodes=1000, optimizer=optimizer)
