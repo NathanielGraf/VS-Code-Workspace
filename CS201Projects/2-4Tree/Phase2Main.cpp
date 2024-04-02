@@ -8,7 +8,7 @@ int main(){
 	
 	two4Tree<string,float> T1(K,V,14), T2;
 	
-	for(int i=0; i<12; i++) T2.insert(K[i],V[i]);
+	for(int i=0; i<14; i++) T2.insert(K[i],V[i]);
 
 
 	
@@ -28,6 +28,10 @@ int main(){
 	
 	T2.inorder();
 	//Should output	A B C D E F G H I K L M\n	
+
+	cout << T1.duplicates("D") << endl;
+
+	cout << T2.duplicates("D") << endl;
 
 	//
 	

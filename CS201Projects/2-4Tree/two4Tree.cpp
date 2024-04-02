@@ -273,23 +273,10 @@ public:
 
     unordered_map<keytype, int> duplicatehash;
 
-    //Duplicate key counter map
+    //Duplicate key counter map, RETURN counter of key
     int duplicates(keytype key) 
     {
         return duplicatehash[key];
-    }
-
-    //Checker to see if a key is in a node, so we can increment the counter and add the value to the CDA
-    bool keyInNode(Node &node, keytype key) 
-    {
-        for (int i = 0; i < node.type - 1; i++) 
-        {
-            if (node.keys[i] == key) 
-            {
-                return i;
-            }
-        }
-        return -1;
     }
 
     
@@ -315,15 +302,7 @@ public:
         Node *curr = root;
         while (curr != nullptr) 
         {   
-            //If the key is already in the node, increment the counter and add the value to the CDA
-            if (keyInNode(*curr, key) != -1) 
-            {
-                int index = keyInNode(*curr, key);
-                curr->values[index].addFront(value);
-                duplicatehash[key]++;
-                return;
-            }
-            else if (curr->type == 2) 
+            if (curr->type == 2) 
             {
                 insert2Node(*curr, key, value);
 
@@ -358,17 +337,9 @@ public:
     void insert2Node(Node &curr, keytype key, valuetype value)
     {
 
-        //If the key is already in the node, increment the counter and add the value to the CDA
-        if (keyInNode(curr, key) != -1) 
-        {
-            int index = keyInNode(curr, key);
-            curr.values[index].addFront(value);
-            duplicatehash[key]++;
-            return;
-        }
 
         //cout << "Inserting into 2-node " << endl;
-        else if (key < curr.keys[0]) 
+        if (key < curr.keys[0]) 
         {
             if (curr.children[0] == nullptr) 
             {
@@ -421,25 +392,16 @@ public:
                 }
             }
         } 
-        /* What is this 
+        
         else 
         {
             curr.values[0].addFront(value);
+            duplicatehash[key]++;
         }
-        */
     }
 
     void insert3Node(Node &curr, keytype key, valuetype value)
     {
-
-        //If the key is already in the node, increment the counter and add the value to the CDA
-        if (keyInNode(curr, key) != -1) 
-        {
-            int index = keyInNode(curr, key);
-            curr.values[index].addFront(value);
-            duplicatehash[key]++;
-            return;
-        }
 
 
         if (key < curr.keys[0]) 
@@ -529,19 +491,32 @@ public:
                 }
             }
         }
+
+        else
+        {
+            if (curr.keys[0] == key) 
+            {
+                curr.values[0].addFront(value);
+                duplicatehash[key]++;
+            } 
+            else if (curr.keys[1] == key) 
+            {
+                curr.values[1].addFront(value);
+                duplicatehash[key]++;
+            } 
+        }
     }
 
     void insert4Node(Node &curr, keytype key, valuetype value)
     {
-        //Could be a problem if we are supposed to split before checking if the key is in the node
-        //If the key is already in the node, increment the counter and add the value to the CDA
-        if (keyInNode(curr, key) != -1) 
+        //Check to see if the key is the same as the middle key: if it is, add the value to the middle value
+        if (key == curr.keys[1]) 
         {
-            int index = keyInNode(curr, key);
-            curr.values[index].addFront(value);
+            curr.values[1].addFront(value);
             duplicatehash[key]++;
             return;
         }
+        //Everything else should be covered by the 2-node and 3-node cases
 
         cout << "Splitting 4-node " << endl;
         //Split the 4-node into two 2-nodes and promote the middle key to the parent
