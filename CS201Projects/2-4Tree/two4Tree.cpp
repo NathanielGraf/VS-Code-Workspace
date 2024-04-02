@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <cstdlib>
+#include <unordered_map>
 
 using namespace std;
 
@@ -80,18 +81,6 @@ public:
         return arr[(front + i) % cap]; // Consider the circular nature
     }
 
-    // Add an element at the end
-    void addEnd(elmtype v)
-    {
-        if (sz == cap)
-        {
-            resize(cap * 2);
-        }
-        back = (front + sz) % cap; // Correctly calculate back considering the circular nature
-        arr[back] = v;
-        sz++; // Increment size after adding the element
-    }
-
     // Add an element at the front
     void addFront(elmtype v)
     {
@@ -103,25 +92,6 @@ public:
         arr[front] = v;
         sz++; // Increment size after adding the element
     }
-
-    void delEnd()
-    {
-        if (sz == 0) // Check if the array is empty
-        {
-            cout << "Array is empty. No elements to remove from the end." << endl;
-            return;
-        }
-
-        sz--;
-        back = (front + sz) % cap; // Update back index
-
-        // Check if size is 25% or less of capacity
-        if (sz > 0 && sz <= cap / 4)
-        {
-            resize(cap / 2); // Resize to half the current capacity
-        }
-    }
-
     
     void delFront()
     {
@@ -161,40 +131,6 @@ public:
         arr = new elmtype[cap];
     }
 
-    // Method to sort the array
-    void Sort() {
-        if (sz <= 1) return; // Array is already sorted
-        std::srand(1); // Seed the random number generator
-        quicksort(0, sz - 1);
-    }
-
-    // Quicksort function
-    void quicksort(int left, int right) {
-        if (left < right) {
-            int pivotIndex = partition(left, right); // Partition the array and get the pivot index
-            quicksort(left, pivotIndex - 1); // Recursively apply quicksort to the left sub-array
-            quicksort(pivotIndex + 1, right); // Recursively apply quicksort to the right sub-array
-        }
-    }
-
-    // Partition function
-    int partition(int left, int right) {
-        int pivotIndex = left + std::rand() % (right - left + 1); // Choose a random pivot
-        elmtype pivotValue = arr[(front + pivotIndex) % cap];
-        std::swap(arr[(front + pivotIndex) % cap], arr[(front + right) % cap]); // Move pivot to end
-        int storeIndex = left;
-
-        for (int i = left; i < right; i++) {
-            if (arr[(front + i) % cap] < pivotValue) {
-                std::swap(arr[(front + i) % cap], arr[(front + storeIndex) % cap]);
-                storeIndex++;
-            }
-        }
-
-        std::swap(arr[(front + storeIndex) % cap], arr[(front + right) % cap]); // Move pivot to its final place
-        return storeIndex;
-    }
-
     // Method to print the array contents
     void printArray() const {
         for (int i = 0; i < sz; ++i) {
@@ -221,231 +157,621 @@ private:
         front = 0; // Reset front to 0
         back = sz; // Update back based on the new size
     }
-
-    // Utility method to partition the elements in the array
-    int partition(int left, int right, int pivotIndex) 
-    {
-        elmtype pivotValue = arr[(front + pivotIndex) % cap];
-        // Move pivot to the end
-        std::swap(arr[(front + pivotIndex) % cap], arr[(front + right) % cap]);
-
-        int storeIndex = left;
-        for (int i = left; i < right; i++) {
-            if (arr[(front + i) % cap] < pivotValue) {
-                std::swap(arr[(front + i) % cap], arr[(front + storeIndex) % cap]);
-                storeIndex++;
-            }
-        }
-
-        // Move pivot to its final place
-        std::swap(arr[(front + right) % cap], arr[(front + storeIndex) % cap]);
-        return storeIndex;
-    }
-
 };
 
-
 template <typename keytype, typename valuetype>
-class two4Tree {
+class two4Tree 
+{
 private:
-    class Node {
-    public:
-        vector<keytype> keys; // Can store up to 3 keys
-        vector<CircularDynamicArray<valuetype>> values; // Use CircularDynamicArray to store values
-        vector<Node*> children; // Pointers to child nodes
-        Node* parent;
+    class Node 
+    {
+        //Each node of the tree needs: 
+        //1. A vector of keys
+        //2. A vector of values
+        //3. A vector of children
+        //4. A pointer to the parent
 
-        // Node Constructor
-        Node() : parent(nullptr) {
-            // Assume each key has a corresponding CircularDynamicArray in values
-            for (int i = 0; i < 3; ++i) {
-                values.push_back(CircularDynamicArray<valuetype>());
+        //Array of 3 keys
+        //4 child pointers
+        //int type {2,3,4}, 2 is 2-node, 3 is 3-node, 4 is 4-node
+        //Subtree size
+        //CDA <valuetype> values [3]
+        // duplicates [3]
+
+        public:
+        
+        //Array of 3 keys
+        keytype keys[3];
+
+        //Counter for duplicates of each key
+        int duplicates[3];
+
+        //The 3 indices of the values array contains CDA's of values
+        //Use a CircularDynamicArray to store the values, 3 CDA's in the array
+        CircularDynamicArray<valuetype> values[3];
+        
+
+        //4 child pointers
+        Node *children[4];
+
+        //Pointer to the parent
+        Node *parent;
+
+        //int type {2,3,4}, 2 is 2-node, 3 is 3-node, 4 is 4-node
+        int type = 2;
+
+        //Subtree size
+        int subtreeSize = 1;
+
+        //Default constructor
+        Node() 
+        {
+            // Initialize each CircularDynamicArray object in the 'values' array
+            for (int i = 0; i < 3; ++i) 
+            {
+                values[i] = CircularDynamicArray<valuetype>();
+            }
+            // Set all children to nullptr initially
+            for (int i = 0; i < 4; ++i) 
+            {
+                children[i] = nullptr;
+            }
+            parent = nullptr;
+            // Initialize duplicates array
+            for (int i = 0; i < 3; ++i) 
+            {
+                duplicates[i] = 0;
             }
         }
 
-        // Check if the node is a leaf
-        bool isLeaf() const {
-            return children.empty();
-        }
-
-        // Method to print a node's keys and values
-        void printNode() const {
-            for (size_t i = 0; i < keys.size(); ++i) {
-                cout << keys[i] << ": ";
-                values[i].printArray(); // Assuming CircularDynamicArray has a printArray() method
-                if (i < keys.size() - 1) {
-                    cout << " | "; // Separator between keys in the same node
-                }
-            }
-        }
-
-        bool containsKey(const keytype& key) {
-            return std::find(keys.begin(), keys.end(), key) != keys.end();
-        }
-
-        void insertNonFull(const keytype& key, const valuetype& value) {
-            if (isLeaf()) {
-                auto it = lower_bound(keys.begin(), keys.end(), key);
-                if (it != keys.end() && *it == key) {
-                    // Key found, add value to the existing key's values
-                    int index = it - keys.begin();
-                    values[index].addEnd(value);
-                } else {
-                    // Key not found, insert new key and value
-                    keys.insert(it, key);
-                    values.insert(values.begin() + (it - keys.begin()), CircularDynamicArray<valuetype>());
-                    values[it - keys.begin()].addEnd(value);
-                }
-            } else {
-                // Find the child which is going to have the new key
-                int i = keys.size() - 1;
-                while (i >= 0 && keys[i] > key) i--;
-                // Check if the found child is full
-                if (children[i+1]->keys.size() == 3) {
-                    splitChild(i+1, children[i+1]);
-                    if (keys[i+1] < key) i++;
-                }
-                children[i+1]->insertNonFull(key, value);
-            }
-        }
-
-        void splitChild(int i, Node* y) {
-            // Split the child y of this node. i is index of y in child array children.
-            // Node y must be full when this function is called
-
-            // Create a new node which is going to store (t-1) keys of y
-            Node* z = new Node();
-            z->parent = y->parent;
-
-            // Copy the last (t-1) keys and children from y to z
-            z->keys.insert(z->keys.end(), y->keys.begin() + 2, y->keys.end());
-            z->values.insert(z->values.end(), y->values.begin() + 2, y->values.end());
-            y->keys.resize(2);
-            y->values.resize(2);
-
-            if (!y->isLeaf()) {
-                z->children.insert(z->children.end(), y->children.begin() + 3, y->children.end());
-                y->children.resize(3);
-            }
-
-            // Insert a new key in the parent node and update parent's children
-            keys.insert(keys.begin() + i, y->keys[2]);
-            values.insert(values.begin() + i, y->values[2]);
-            children.insert(children.begin() + (i + 1), z);
-
-            // Remove the median key from y
-            y->keys.pop_back();
-            y->values.pop_back();
-        }
-
-
-        //Other node methods
     };
 
-    Node* root;
+    Node *root;
+public:
+    
+    //Default constructor
+    two4Tree() 
+    {
+        root = nullptr;
+    }
 
-    // Helper function for in-order traversal
-    void printInOrderHelper(Node* node) const {
-        if (node == nullptr) return;
+    //Copy constructor
+    two4Tree(const two4Tree &other) 
+    {
 
-        // If the node is a leaf, just print its keys and values
-        if (node->isLeaf()) {
-            node->printNode();
-            cout << endl;
+        //Call a recursive helper function to copy all nodes in the tree
+        root = copyTree(other.root);
+
+        
+    }
+
+    two4Tree(keytype k[], valuetype v[], int s) 
+    {
+        root = nullptr;
+        for (int i = 0; i < s; i++) 
+        {
+            insert(k[i], v[i]);
+        }
+    }
+
+    
+    //Destructor
+    // Helper function to recursively delete nodes
+    void clear(Node* node) {
+        if (node != nullptr) {
+            // Recursively delete child nodes
+            for (int i = 0; i < 4; ++i) {
+                clear(node->children[i]);
+            }
+            // After the children have been deleted, delete the node itself
+            delete node;
+        }
+    }
+
+    //Create hash table to store counter of each key
+    
+
+    unordered_map<keytype, int> duplicatehash;
+
+    //Duplicate key counter map
+    int duplicates(keytype key) 
+    {
+        return duplicatehash[key];
+    }
+
+    //Checker to see if a key is in a node, so we can increment the counter and add the value to the CDA
+    bool keyInNode(Node &node, keytype key) 
+    {
+        for (int i = 0; i < node.type - 1; i++) 
+        {
+            if (node.keys[i] == key) 
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    
+    //Insert a key-value pair into the tree
+    void insert(keytype key, valuetype value) 
+    {
+        //Start at root, traverse down to leaf
+
+        //If root is null, create a new node with the key-value pair
+        if (root == nullptr) 
+        {
+            root = new Node();
+            root->keys[0] = key;
+            root->values[0].addFront(value);
+
+            duplicatehash[key] = 1;
+
+            cout << "Tree structure after inserting key: " << key << "\n";
+            printNodeStructure(root);
+            cout << "---------------------------------\n";
+            return;
+        }
+        Node *curr = root;
+        while (curr != nullptr) 
+        {   
+            //If the key is already in the node, increment the counter and add the value to the CDA
+            if (keyInNode(*curr, key) != -1) 
+            {
+                int index = keyInNode(*curr, key);
+                curr->values[index].addFront(value);
+                duplicatehash[key]++;
+                return;
+            }
+            else if (curr->type == 2) 
+            {
+                insert2Node(*curr, key, value);
+
+                cout << "Tree structure after inserting key: " << key << "\n";
+                printNodeStructure(root);
+                cout << "---------------------------------\n";
+                return;
+            } 
+            else if (curr->type == 3) 
+            {
+                insert3Node(*curr, key, value);
+
+                cout << "Tree structure after inserting key: " << key << "\n";
+                printNodeStructure(root);
+                cout << "---------------------------------\n";
+                return;
+            } 
+            else if (curr->type == 4) 
+            {
+                insert4Node(*curr, key, value);
+
+                cout << "Tree structure after inserting key: " << key << "\n";
+                printNodeStructure(root);
+                cout << "---------------------------------\n";
+                return;
+            }
+        }
+
+        
+    }
+
+    void insert2Node(Node &curr, keytype key, valuetype value)
+    {
+
+        //If the key is already in the node, increment the counter and add the value to the CDA
+        if (keyInNode(curr, key) != -1) 
+        {
+            int index = keyInNode(curr, key);
+            curr.values[index].addFront(value);
+            duplicatehash[key]++;
             return;
         }
 
-        // In-order traversal
-        for (size_t i = 0; i < node->keys.size(); ++i) {
-            // Visit left child
-            if (i < node->children.size()) {
-                printInOrderHelper(node->children[i]);
+        //cout << "Inserting into 2-node " << endl;
+        else if (key < curr.keys[0]) 
+        {
+            if (curr.children[0] == nullptr) 
+            {
+                curr.keys[1] = curr.keys[0];
+                curr.values[1] = curr.values[0];
+                curr.keys[0] = key;
+                curr.values[0].addFront(value);
+                duplicatehash[key] = 1;
+                curr.type = 3;
+            } 
+            else 
+            {
+                
+                if (curr.children[0]->type == 2) 
+                {
+                    insert2Node(*curr.children[0], key, value);
+                } 
+                else if (curr.children[0]->type == 3) 
+                {
+                    insert3Node(*curr.children[0], key, value);
+                } 
+                else if (curr.children[0]->type == 4) 
+                {
+                    insert4Node(*curr.children[0], key, value);
+                }
             }
-            // Visit node's key and value
-            cout << node->keys[i] << ": ";
-            node->values[i].printArray(); // Assuming CircularDynamicArray has a printArray() method
-            cout << endl;
+        } 
+        else if (key > curr.keys[0]) 
+        {
+            if (curr.children[1] == nullptr) 
+            {
+                curr.keys[1] = key;
+                curr.values[1].addFront(value);
+                duplicatehash[key] = 1;
+                curr.type = 3;
+            } 
+            else 
+            {
+                if (curr.children[1]->type == 2) 
+                {
+                    insert2Node(*curr.children[1], key, value);
+                } 
+                else if (curr.children[1]->type == 3) 
+                {
+                    insert3Node(*curr.children[1], key, value);
+                } 
+                else if (curr.children[1]->type == 4) 
+                {
+                    insert4Node(*curr.children[1], key, value);
+                }
+            }
+        } 
+        /* What is this 
+        else 
+        {
+            curr.values[0].addFront(value);
         }
-        // Visit rightmost child
-        printInOrderHelper(node->children[node->children.size() - 1]);
+        */
     }
 
-    void clear(Node* node) {
-        if (node == nullptr) return;
-
-        for (Node* child : node->children) {
-            clear(child);
-        }
-        delete node;
-    }
-
-
-
-
-
-
-public:
-    two4Tree() : root(nullptr) {}
-
-    ~two4Tree() 
+    void insert3Node(Node &curr, keytype key, valuetype value)
     {
-        clear(root);
-    }
 
-    void insert(const keytype& key, const valuetype& value) {
-        if (root == nullptr) {
-            root = new Node();
-            root->keys.push_back(key);
-            root->values.emplace_back(CircularDynamicArray<valuetype>());
-            root->values.back().addEnd(value);
-        } else {
-            if (root->keys.size() == 3) {
-                Node* newNode = new Node();
-                newNode->children.push_back(root);
-                root->parent = newNode;
-                newNode->splitChild(0, root);
-                int i = (newNode->keys[0] < key) ? 1 : 0;
-                newNode->children[i]->insertNonFull(key, value);
-                root = newNode;
-            } else {
-                root->insertNonFull(key, value);
+        //If the key is already in the node, increment the counter and add the value to the CDA
+        if (keyInNode(curr, key) != -1) 
+        {
+            int index = keyInNode(curr, key);
+            curr.values[index].addFront(value);
+            duplicatehash[key]++;
+            return;
+        }
+
+
+        if (key < curr.keys[0]) 
+        {
+            if (curr.children[0] == nullptr) 
+            {
+                curr.keys[2] = curr.keys[1];
+                curr.values[2] = curr.values[1];
+                curr.keys[1] = curr.keys[0];
+                curr.values[1] = curr.values[0];
+                curr.keys[0] = key;
+                curr.values[0].addFront(value);
+                
+                duplicatehash[key] = 1;
+
+                curr.type = 4;
+            } 
+            else 
+            {
+                if (curr.children[0]->type == 2) 
+                {
+                    insert2Node(*curr.children[0], key, value);
+                } 
+                else if (curr.children[0]->type == 3) 
+                {
+                    insert3Node(*curr.children[0], key, value);
+                } 
+                else if (curr.children[0]->type == 4) 
+                {
+                    insert4Node(*curr.children[0], key, value);
+                }
+            }
+        } 
+        else if (key > curr.keys[0] && key < curr.keys[1]) 
+        {
+            if (curr.children[1] == nullptr) 
+            {
+                curr.keys[2] = curr.keys[1];
+                curr.values[2] = curr.values[1];
+                curr.keys[1] = key;
+                curr.values[1].addFront(value);
+
+                duplicatehash[key] = 1;
+
+                curr.type = 4;
+            } 
+            else 
+            {
+                if (curr.children[1]->type == 2) 
+                {
+                    insert2Node(*curr.children[1], key, value);
+                } 
+                else if (curr.children[1]->type == 3) 
+                {
+                    insert3Node(*curr.children[1], key, value);
+                } 
+                else if (curr.children[1]->type == 4) 
+                {
+                    insert4Node(*curr.children[1], key, value);
+                }
+            }
+        } 
+        else if (key > curr.keys[1]) 
+        {
+            if (curr.children[2] == nullptr) 
+            {
+                curr.keys[2] = key;
+                curr.values[2].addFront(value);
+
+                duplicatehash[key] = 1;
+
+                curr.type = 4;
+            }
+            else 
+            {
+                if (curr.children[2]->type == 2) 
+                {
+                    insert2Node(*curr.children[2], key, value);
+                } 
+                else if (curr.children[2]->type == 3) 
+                {
+                    insert3Node(*curr.children[2], key, value);
+                } 
+                else if (curr.children[2]->type == 4) 
+                {
+                    insert4Node(*curr.children[2], key, value);
+                }
             }
         }
     }
 
-    // Method to print the tree in-order
-    void printInOrder() const {
-        printInOrderHelper(root);
+    void insert4Node(Node &curr, keytype key, valuetype value)
+    {
+        //Could be a problem if we are supposed to split before checking if the key is in the node
+        //If the key is already in the node, increment the counter and add the value to the CDA
+        if (keyInNode(curr, key) != -1) 
+        {
+            int index = keyInNode(curr, key);
+            curr.values[index].addFront(value);
+            duplicatehash[key]++;
+            return;
+        }
+
+        cout << "Splitting 4-node " << endl;
+        //Split the 4-node into two 2-nodes and promote the middle key to the parent
+        Node *newNode = new Node();
+        Node *newNode2 = new Node();
+
+        //Define the types of the new nodes
+        newNode->type = 2;
+        newNode2->type = 2;
+
+        
+
+        //Store the middle key of the 4-node 
+        keytype middleKey = curr.keys[1];
+
+        //Store the middle value of the 4-node
+        valuetype middleValue = curr.values[1][0];
+
+        //Erase the middle key and value from the 4-node
+        curr.keys[1] = curr.keys[2];
+        curr.values[1] = curr.values[2];
+
+        //newNode gets the 2 smallest children of the 4-node
+        newNode->children[0] = curr.children[0];
+        newNode->children[1] = curr.children[1];
+
+        //newNode2 gets the 2 largest children of the 4-node
+        newNode2->children[0] = curr.children[2];
+        newNode2->children[1] = curr.children[3];
+
+        //Split the now 3-node into two 2-nodes
+        newNode->keys[0] = curr.keys[0];
+        newNode->values[0] = curr.values[0];
+        newNode2->keys[0] = curr.keys[1];
+        newNode2->values[0] = curr.values[1];
+
+        
+        
+
+        //Find the place to insert the middle key and value in the parent
+        if (curr.parent == nullptr) 
+        {
+            Node *newRoot = new Node();
+            newRoot->keys[0] = middleKey;
+            newRoot->values[0].addFront(middleValue);
+            newRoot->children[0] = newNode;
+            newRoot->children[1] = newNode2;
+            newNode->parent = newRoot;
+            newNode2->parent = newRoot;
+            root = newRoot;
+        }
+
+        else if (curr.parent->type == 2) 
+        {
+            if (middleKey < curr.parent->keys[0]) 
+            {
+                curr.parent->keys[1] = curr.parent->keys[0];
+                curr.parent->values[1] = curr.parent->values[0];
+                curr.parent->keys[0] = middleKey;
+                curr.parent->values[0].addFront(middleValue);
+                curr.parent->children[2] = curr.parent->children[1];
+                curr.parent->children[0] = newNode;
+                curr.parent->children[1] = newNode2;
+                 //Define the parent of the new nodes
+                newNode->parent = curr.parent;
+                newNode2->parent = curr.parent;
+                
+                curr.parent->type = 3;
+            } 
+            else 
+            {
+                curr.parent->keys[1] = middleKey;
+                curr.parent->values[1].addFront(middleValue);
+                curr.parent->children[1] = newNode;
+                curr.parent->children[2] = newNode2;
+                 //Define the parent of the new nodes
+                newNode->parent = curr.parent;
+                newNode2->parent = curr.parent;
+                        
+                curr.parent->type = 3;
+            }
+        } 
+        else if (curr.parent->type == 3) 
+        {
+            if (middleKey < curr.parent->keys[0]) 
+            {
+                curr.parent->keys[2] = curr.parent->keys[1];
+                curr.parent->values[2] = curr.parent->values[1];
+                curr.parent->keys[1] = curr.parent->keys[0];
+                curr.parent->values[1] = curr.parent->values[0];
+                curr.parent->keys[0] = middleKey;
+                curr.parent->values[0].addFront(middleValue);
+                curr.parent->children[3] = curr.parent->children[2];
+                curr.parent->children[2] = curr.parent->children[1];
+                curr.parent->children[0] = newNode;
+                curr.parent->children[1] = newNode2;
+                 //Define the parent of the new nodes
+                newNode->parent = curr.parent;
+                newNode2->parent = curr.parent;
+                curr.parent->type = 4;
+            } 
+            else if (middleKey > curr.parent->keys[0] && middleKey < curr.parent->keys[1]) 
+            {
+                curr.parent->keys[2] = curr.parent->keys[1];
+                curr.parent->values[2] = curr.parent->values[1];
+                curr.parent->keys[1] = middleKey;
+                curr.parent->values[1].addFront(middleValue);
+                curr.parent->children[3] = curr.parent->children[2];
+                curr.parent->children[1] = newNode;
+                curr.parent->children[2] = newNode2;
+                //Define the parent of the new nodes
+                newNode->parent = curr.parent;
+                newNode2->parent = curr.parent;
+                curr.parent->type = 4;
+            } 
+            else 
+            {
+                curr.parent->keys[2] = middleKey;
+                curr.parent->values[2].addFront(middleValue);
+                curr.parent->children[2] = newNode;
+                curr.parent->children[3] = newNode2;
+                //Define the parent of the new nodes
+                newNode->parent = curr.parent;
+                newNode2->parent = curr.parent;
+                curr.parent->type = 4;
+            }
+        }
+
+       
+
+        //Set the parent pointers of the new nodes
+        if (curr.children[0]) curr.children[0]->parent = newNode;
+        if (curr.children[1]) curr.children[1]->parent = newNode;
+        if (curr.children[2]) curr.children[2]->parent = newNode2;
+        if (curr.children[3]) curr.children[3]->parent = newNode2;
+
+
+
+        //Insert the key and value into the appropriate 2-node
+        //If the key is less than the middle key, insert into the left 2-node
+        if (key < middleKey) 
+        {
+            insert2Node(*newNode, key, value);
+        }
+        //If the key is greater than the middle key, insert into the right 2-node
+        else 
+        {
+            insert2Node(*newNode2, key, value);
+        }
+        
+
+        
+        
+
+        
+
+
+        
+
+    }
+
+    // Helper function to print a node and its children (for debugging)
+    void printNodeStructure(Node* node, int depth = 0) {
+        if (node == nullptr) return;
+        string indent(depth * 4, ' '); // Create an indent based on the depth of the node
+        cout << indent << "Node keys: ";
+        for (int i = 0; i < node->type - 1; ++i) {
+            cout << node->keys[i] << " ";
+        }
+        cout << "\n";
+        for (int i = 0; i < node->type; ++i) {
+            printNodeStructure(node->children[i], depth + 1); // Recursively print children
+        }
+    }
+
+    //Print the tree inorder
+    void inorder() 
+    {
+        printf("Inorder: ");
+        inorder(root);
+        cout << endl;
+    }
+   
+    void inorder(Node* node) 
+    {
+        if (node == nullptr) 
+            return;  // Base case: empty subtree
+
+        // In a 2-4 tree, nodes can have between 2 and 4 children and 1 to 3 keys
+        // The number of keys in a node is always one less than the number of children
+
+        // First, visit the leftmost child
+        inorder(node->children[0]);
+
+        // Then, process the keys and in-between children
+        for (int i = 0; i < node->type - 1; i++) 
+        {
+            // Print the ith key
+            cout << node->keys[i] << " ";
+            // Visit the ith+1 child which lies between the ith and (i+1)th keys
+            inorder(node->children[i+1]);
+        }
+    }
+
+    // Public function to call preorder traversal
+    void preorder() 
+    {
+        preorder(root);  // Call the private helper function starting at the root
+        cout << endl;  // End the line after printing all keys
+    }
+
+    
+    // Recursive helper function for preorder traversal
+    void preorder(Node* node) 
+    {
+        if (node == nullptr) 
+            return;  // Base case: empty subtree
+
+        // Process the current node's keys
+        for (int i = 0; i < node->type - 1; i++) 
+        {
+            cout << node->keys[i] << " ";
+        }
+        cout << "\n";  // Print a newline after the keys of the node
+
+        // Then, visit each child from left to right
+        for (int i = 0; i < node->type; i++) 
+        {
+            preorder(node->children[i]);
+        }
     }
 };
-
-int main() {
-    two4Tree<int, std::string> tree;
-
-    // Insert some nodes with values
-    tree.insert(15, "Apple");
-    tree.insert(10, "Banana");
-    tree.insert(20, "Cherry");
-    tree.insert(25, "Date");
-    tree.insert(8, "Elderberry");
-    tree.insert(12, "Fig");
-    tree.insert(15, "Grape");
-
-    // Print the tree in-order
-    std::cout << "Tree in-order after insertions:" << std::endl;
-    tree.printInOrder();
-    std::cout << std::endl;
-
-    // Test insertions that require node splits
-    tree.insert(30, "Honeydew");
-    tree.insert(35, "Kiwi");
-    tree.insert(40, "Lemon");
-    
-    // Print the tree in-order after more insertions
-    std::cout << "Tree in-order after more insertions:" << std::endl;
-    tree.printInOrder();
-    std::cout << std::endl;
-
-    return 0;
-}
 

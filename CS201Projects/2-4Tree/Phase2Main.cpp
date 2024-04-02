@@ -3,23 +3,35 @@ using namespace std;
 #include "two4Tree.cpp"
 
 int main(){
-	string K[12] = {"A","B","C","D","E","F","G","H","I","K","L","M"};
-	float V[12] = {12,11,10,9,8,7,6,5,4,3,2,1};
+	string K[14] = {"A","B","C","D","D","D","E","F","G","H","I","K","L","M"};
+	float V[14] = {12,11,10,9,8,7,6,5,4,3,2,1,0,0};
 	
-	two4Tree<string,float> T1(K,V,12), T2;
+	two4Tree<string,float> T1(K,V,14), T2;
 	
 	for(int i=0; i<12; i++) T2.insert(K[i],V[i]);
-	// T1 and T2 should be the same trees
+
+
 	
+	
+	// T1 and T2 should be the same trees
+
+	
+
 	T1.preorder();
 	//Should output "D\n B\n A\n C\n F H K\n E\n G\n I\n L M\n"
 	
 	T2.preorder();
 	//Should output "D\n B\n A\n C\n F H K\n E\n G\n I\n L M\n"
+
+	T1.inorder();
+	//Should output	A B C D E F G H I K L M\n	
 	
 	T2.inorder();
 	//Should output	A B C D E F G H I K L M\n	
+
+	//
 	
+	/*
 	cout << *(T2.search("I")) << endl;
 	// Should output 4
 	
@@ -75,4 +87,5 @@ int main(){
 	}  
 	//Should be no output and should take seconds, not minutes
 	return 0;
+	*/
 }
