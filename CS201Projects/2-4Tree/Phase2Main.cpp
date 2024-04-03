@@ -29,9 +29,23 @@ int main(){
 	T2.inorder();
 	//Should output	A B C D E F G H I K L M\n	
 
+	T1.postorder();
+
+	T2.postorder();
+
 	cout << T1.duplicates("D") << endl;
 
 	cout << T2.duplicates("D") << endl;
+
+	//Print 
+	cout << *(T1.search("D")) << endl;
+	//Should be 9
+
+	cout << *(T2.search("E")) << endl;
+	//Should be 6
+
+	//Should be simple as M is in a leaf with no underflow
+	T1.remove("M");
 
 	//
 	
