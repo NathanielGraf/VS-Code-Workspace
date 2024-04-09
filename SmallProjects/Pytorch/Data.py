@@ -316,21 +316,28 @@ class CardGameEnv:
             return 167 + 12*(14-house_card) + (14-full_card) - (full_card < house_card)
         
     def flush_check(self, suits, cards):
-        high_card = 0
+        first = 0
         for i in suits:
             if suits[i] >= 5:
-                flush_high_card = 0
                 for j in range(len(cards)):
-                    if cards[j][0] == i:
-                        flush_high_card = max(flush_high_card, cards[j][1])
-                high_card = max(high_card, flush_high_card)
+                    if cards[j][0] == i and cards[j][1] >= first:
+                        if cards[j][1] > first or cards[j+1][1] > second or cards[j+2][1] > third or cards[j+3][1] > fourth or cards[j+4][1] > fifth:
+                            first = cards[j][1]
+                            second = cards[j+1][1]
+                            third = cards[j+2][1]
+                            fourth = cards[j+3][1]
+                            fifth = cards[j+4][1]
+                            
+                        #Break the loop if we find the first card of the suit we are looking for, move to the next suit.
+                        break
+                
         
-        if high_card == 0:
+        if first == 0:
             #print("No Flush")
             return 0
         else:
             #print("Flush", high_card)
-            return high_card
+            return 323 + 492(14-first) + 78(14-(first-second) + 13(14-third) + 2(14-fourth) + (14-fifth
         
     def straight_check(self, hand):
         high_card = 0
