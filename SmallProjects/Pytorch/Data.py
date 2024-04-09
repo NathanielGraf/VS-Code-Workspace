@@ -313,7 +313,7 @@ class CardGameEnv:
             
         else:     
             #print("Full House", house_card, "full of", full_card)
-            return house_card
+            return 167 + 12*(14-house_card) + (14-full_card) - (full_card < house_card)
         
     def flush_check(self, suits, cards):
         high_card = 0
