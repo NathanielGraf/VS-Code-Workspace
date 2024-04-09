@@ -163,7 +163,7 @@ class CardGameEnv:
         
         player_hand = self.player_hand.copy()
         
-        player_hand = [('S', 4), ('D', 4), ('C', 4), ('H', 4), ('C', 2)]
+        player_hand = [('S', 14), ('D', 14), ('C', 14), ('H', 14), ('C', 13)]
         print("player_hand:", player_hand)
         
         
