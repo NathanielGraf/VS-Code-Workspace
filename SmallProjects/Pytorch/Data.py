@@ -163,6 +163,9 @@ class CardGameEnv:
         
         player_hand = self.player_hand.copy()
         
+        player_hand = [('S', 4), ('D', 4), ('C', 4), ('H', 4), ('C', 2)]
+        print("player_hand:", player_hand)
+        
         
         opponent_hand = self.opponent_hand.copy()   
         player_hand = self.sort_hand(player_hand)
@@ -188,162 +191,63 @@ class CardGameEnv:
             opponent_values[opponent_hand[i][1]] += 1
             
         
-        player_hand = [('C', 2), ('C', 3), ('C', 4), ('C', 5), ('C', 14)]
-        print("player_hand:", player_hand)
+        #player_hand = [('C', 2), ('C', 3), ('C', 4), ('C', 5), ('C', 14)]
+        #print("player_hand:", player_hand)
             
         player_strength = self.get_hand_strength(player_hand, player_suits, player_values)
-        opponent_strength = self.get_hand_strength(opponent_hand, opponent_suits, opponent_values)
+        #opponent_strength = self.get_hand_strength(opponent_hand, opponent_suits, opponent_values)
         
         print("player_strength:", player_strength)
-        print("opponent_strength:", opponent_strength)
+        #print("opponent_strength:", opponent_strength)
         
-        if player_strength > opponent_strength:
-            return True
-        else:
-            return False
+        #if player_strength > opponent_strength:
+            #return True
+        #else:
+            #return False
         
     def get_hand_strength(self, hand, suits, values):  
         player_holdings = self.straight_flush_check(hand)
         if player_holdings != 0:
             return player_holdings
             
-        
-        player_holdings = self.four_of_a_kind_check(player_values)
-        opponent_holdings = self.four_of_a_kind_check(opponent_values)
-        if player_holdings != 0 or opponent_holdings != 0:
-            if player_holdings > opponent_holdings:
-                winner = "Player"
-                return winner
-            else:
-                winner = "Opponent"
-                return winner
+        player_holdings = self.four_of_a_kind_check(values)
+        if player_holdings != 0:
+            return player_holdings
         
         #Only need to check the house card, since both of them can never have the same house. 
-        player_holdings = self.full_house_check(player_values)
-        opponent_holdings = self.full_house_check(opponent_values)
-        if player_holdings != 0 or opponent_holdings != 0:
-            if player_holdings > opponent_holdings:
-                winner = "Player"
-                return winner
-            else:
-                winner = "Opponent"
-                return winner
+        player_holdings = self.full_house_check(values)
+        if player_holdings != 0:
+            return player_holdings
             
         
-        player_holdings = self.flush_check(player_suits, player_hand)
-        opponent_holdings = self.flush_check(opponent_suits, opponent_hand)
-        if player_holdings != 0 or opponent_holdings != 0:
-            if player_holdings > opponent_holdings:
-                winner = "Player"
-                return winner
-            else:
-                winner = "Opponent"
-                return winner
+        player_holdings = self.flush_check(suits, hand)
+        if player_holdings != 0:
+            return player_holdings
                 
         
-        player_holdings = self.straight_check(player_hand)
-        opponent_holdings = self.straight_check(opponent_hand)
-        if player_holdings != 0 or opponent_holdings != 0:
-            if player_holdings > opponent_holdings:
-                winner = "Player"
-                return winner
-            else:
-                winner = "Opponent"
-                return winner
+        player_holdings = self.straight_check(values)
+        if player_holdings != 0:
+            return player_holdings
 
                 
-        player_holdings = self.three_of_a_kind_check(player_values)
-        opponent_holdings = self.three_of_a_kind_check(opponent_values)
-        if player_holdings != 0 or opponent_holdings != 0:
-            if player_holdings > opponent_holdings:
-                winner = "Player"
-                return winner
-            else:
-                winner = "Opponent"
-                return winner
+        player_holdings = self.three_of_a_kind_check(values)
+        if player_holdings != 0:
+            return player_holdings
                 
-        player_holdings = self.two_pair_check(player_values)
-        opponent_holdings = self.two_pair_check(opponent_values)
+        player_holdings = self.two_pair_check(values)
+        if player_holdings[0] != 0:
+            return player_holdings[0]
         
-        if player_holdings[0] != 0 or opponent_holdings[0] != 0:
-            if player_holdings[0] > opponent_holdings[0]:
-                winner = "Player"
-                
-            elif player_holdings[0] == opponent_holdings[0]:
-                if player_holdings[1] > opponent_holdings[1]:
-                    winner = "Player"
-                elif player_holdings[1] == opponent_holdings[1]:
-                    if player_holdings[2] > opponent_holdings[2]:
-                        winner = "Player"
-                    else:
-                        winner = "Opponent"
-                
-                else:
-                    winner = "Opponent"
-                    
-            
-            else:
-                winner = "Opponent"
+        player_holdings = self.pair_check(values)
+        if player_holdings[0] != 0:
+            return player_holdings[0]
         
-        player_holdings = self.pair_check(player_values)
-        opponent_holdings = self.pair_check(opponent_values)
+        player_holdings = self.high_card_check(values)
+        if player_holdings[0] != 0:
+            return player_holdings[0]
         
-        if player_holdings[0] != 0 or opponent_holdings[0] != 0:
-            if player_holdings[0] > opponent_holdings[0]:
-                winner = "Player"
-                
-            elif player_holdings[0] == opponent_holdings[0]:
-                if player_holdings[1] > opponent_holdings[1]:
-                    winner = "Player"
-                elif player_holdings[1] == opponent_holdings[1]:
-                    if player_holdings[2] > opponent_holdings[2]:
-                        winner = "Player"
-                    elif player_holdings[2] == opponent_holdings[2]:
-                        if player_holdings[3] > opponent_holdings[3]:
-                            winner = "Player"
-                        else:
-                            winner = "Opponent"
-                    else:
-                        winner = "Opponent"
-                
-                else:
-                    winner = "Opponent"
-            
-            else:
-                winner = "Opponent"
-        
-        
-        player_holdings = self.high_card_check(player_values)
-        opponent_holdings = self.high_card_check(opponent_values)
-        
-        if player_holdings[0] != 0 or opponent_holdings[0] != 0:
-            if player_holdings[0] > opponent_holdings[0]:
-                winner = "Player"
-                
-            elif player_holdings[0] == opponent_holdings[0]:
-                if player_holdings[1] > opponent_holdings[1]:
-                    winner = "Player"
-                elif player_holdings[1] == opponent_holdings[1]:
-                    if player_holdings[2] > opponent_holdings[2]:
-                        winner = "Player"
-                    elif player_holdings[2] == opponent_holdings[2]:
-                        if player_holdings[3] > opponent_holdings[3]:
-                            winner = "Player"
-                        elif player_holdings[3] == opponent_holdings[3]:
-                            if player_holdings[4] > opponent_holdings[4]:
-                                winner = "Player"
-                            else:
-                                winner = "Opponent"
-                        else:
-                            winner = "Opponent"
-                    else:
-                        winner = "Opponent"
-                
-                else:
-                    winner = "Opponent"
-            
-            else:
-                winner = "Opponent"
+        print("No hand found")
+        return 0
         
     def straight_flush_check(self, hand):
         high_card = 0
@@ -386,9 +290,9 @@ class CardGameEnv:
         if high_card == 0:
             #print("No Four of a Kind")
             return 0
-        else:     
+        else:       
             #print("Four of a Kind", high_card)
-            return 10 + (14-high_card)*12 + 14- kicker
+            return 11 + 12*(14-high_card) + (14-kicker) - (kicker < high_card)
             
     def full_house_check(self, values):
         house_card = 0
@@ -689,16 +593,10 @@ class PolicyNetwork(nn.Module):
 # Initialize your environment and policy network
 env = CardGameEnv()
 
-# Initialize the deck
-deck = env.init_deck()
-
-# For verification, print out the encoded cards in binary format
-for card in deck:
-    print(bin(card))
 observation_space = env.get_observation_space()
 action_space = env.get_action_space()
 policy_network = PolicyNetwork(observation_space, action_space)
 optimizer = optim.Adam(policy_network.parameters(), lr=1e-3)
 
 # Train the agent
-PolicyNetwork.train(env, policy_network, episodes=1000, optimizer=optimizer)
+PolicyNetwork.train(env, policy_network, episodes=1, optimizer=optimizer)
