@@ -5,12 +5,22 @@ import numpy as np
 #import torchrl
 import random
 import torch.nn.functional as F
+import csv
 
 
 
+highCardTable = {}
 
-
-
+with open('HighCardTable.csv', newline='') as csvfile:
+    reader = csv.reader(csvfile)
+    for row in reader:
+        # Parse the strength and the hand from the row
+        #print(row)
+        strength = int(row[5])
+        hand = (int(row[4]), int(row[3]), int(row[2]), int(row[1]), int(row[0]))
+        # Populate the dictionary
+        highCardTable[hand] = strength
+        #print(highCardTable)
 
 default_dict_suits = {"H": 0, "S": 0, "C": 0, "D": 0}
 default_dict_values = {2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0}
@@ -163,7 +173,7 @@ class CardGameEnv:
         
         player_hand = self.player_hand.copy()
         
-        player_hand = [('S', 14), ('D', 14), ('C', 14), ('H', 14), ('C', 13)]
+        player_hand = [('S', 7), ('S', 5), ('S', 4), ('S', 3), ('S', 2)]
         print("player_hand:", player_hand)
         
         
@@ -337,7 +347,7 @@ class CardGameEnv:
             return 0
         else:
             #print("Flush", high_card)
-            return 323 + 492(14-first) + 78(14-(first-second) + 13(14-third) + 2(14-fourth) + (14-fifth))
+            return highCardTable[(first, second, third, fourth, fifth)]
         
     def straight_check(self, hand):
         high_card = 0
@@ -606,4 +616,4 @@ policy_network = PolicyNetwork(observation_space, action_space)
 optimizer = optim.Adam(policy_network.parameters(), lr=1e-3)
 
 # Train the agent
-PolicyNetwork.train(env, policy_network, episodes=1, optimizer=optimizer)
+PolicyNetwork.train(env, policy_network, episodes=10, optimizer=optimizer)
