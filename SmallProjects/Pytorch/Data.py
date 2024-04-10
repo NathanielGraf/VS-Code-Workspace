@@ -173,7 +173,7 @@ class CardGameEnv:
         
         player_hand = self.player_hand.copy()
         
-        player_hand = [('S', 7), ('S', 5), ('S', 4), ('S', 3), ('S', 2)]
+        player_hand = [('S', 14), ('S', 5), ('S', 4), ('S', 3), ('S', 2)]
         print("player_hand:", player_hand)
         
         
@@ -271,8 +271,8 @@ class CardGameEnv:
                 
             #Check for the special case of the Ace being the lowest card in the straight
             
-            elif counter == 3 and hand[i][0] == hand[i+1][0] and hand[i][1] == 5 and hand[i+1][1] == 14:
-                high_card = hand[i][1]
+            elif counter == 3 and hand[i][0] == hand[i+1][0] and hand[i][1] == 5 and (hand[i][0], 14) in hand:
+                high_card = max(high_card, 5)
 
             else:
                 counter = 0
@@ -349,19 +349,24 @@ class CardGameEnv:
             #print("Flush", high_card)
             return highCardTable[(first, second, third, fourth, fifth)]
         
-    def straight_check(self, hand):
+    def straight_check(self, values):
+        #Don't forget to check for the special case of the Ace being the lowest card in the straight
         high_card = 0
         counter = 0
-        for i in range(len(hand)-1):
-            
-            if hand[i][1] == hand[i+1][1] - 1:
+        for i in range(2, 14):
+            if values[i] == 1 and values[i+1] == 1 and i != 14:
                 counter += 1
-
+                if counter >= 4:
+                    high_card = max(high_card, i+1)
+            
+            #Wheel straight
+            elif counter == 3 and values[i] >= 1 and i == 5 and values[14] >= 1:
+                high_card = max(high_card, 5)
+                
             else:
                 counter = 0
-        
-            if counter >= 4:
-                high_card = max(high_card, hand[i+1][1])
+                
+            
                 
         
         if high_card == 0:
@@ -369,7 +374,10 @@ class CardGameEnv:
             return 0
         else:
             #print("Straight", high_card)
-            return high_card
+            return 1600 + (14-high_card)
+
+        
+        
 
     def three_of_a_kind_check(self, values):
         high_card = 0
