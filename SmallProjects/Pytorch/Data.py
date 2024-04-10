@@ -337,7 +337,7 @@ class CardGameEnv:
             return 0
         else:
             #print("Flush", high_card)
-            return 323 + 492(14-first) + 78(14-(first-second) + 13(14-third) + 2(14-fourth) + (14-fifth
+            return 323 + 492(14-first) + 78(14-(first-second) + 13(14-third) + 2(14-fourth) + (14-fifth))
         
     def straight_check(self, hand):
         high_card = 0
