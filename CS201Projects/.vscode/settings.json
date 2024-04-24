@@ -63,6 +63,7 @@
     "string": "cpp",
     "unordered_map": "cpp",
     "vector": "cpp",
-    "ostream": "cpp"
+    "ostream": "cpp",
+    "cmath": "cpp"
   }
 }

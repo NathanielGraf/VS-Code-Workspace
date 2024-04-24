@@ -173,7 +173,7 @@ class CardGameEnv:
         
         player_hand = self.player_hand.copy()
         
-        player_hand = [('S', 14), ('S', 5), ('S', 4), ('S', 3), ('S', 2)]
+        player_hand = [('S', 14), ('H', 14), ('C', 14), ('D', 13), ('D', 12)]
         print("player_hand:", player_hand)
         
         
@@ -376,21 +376,29 @@ class CardGameEnv:
             #print("Straight", high_card)
             return 1600 + (14-high_card)
 
-        
-        
-
     def three_of_a_kind_check(self, values):
         high_card = 0
+        second = 0
+        third = 0
         for i in values:
             if values[i] == 3:
-                high_card = i
+                high_card = max(high_card, i)
+        
+        for i in values: 
+            if values[i] == 1:
+                second = max(second, i)
+        
+        for i in values: 
+            if values[i] == 1 and i != second:
+                third = max(third, i)
         
         if high_card == 0:
             #print("No Three of a Kind")
             return 0
         else:     
             #print("Three of a Kind", high_card)
-            return high_card
+            #return (1610 + 65*(14-high_card) + 12*(14-second) + (14-third) - (third < high_card) - (third < second) - 12(second < high_card))
+            return 1610 + 65*(14-high_card) + 66 - int((second-2)*(second-3)/2)
 
     def two_pair_check(self, values):
         top_pair = 0
