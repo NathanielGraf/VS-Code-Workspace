@@ -101,11 +101,11 @@ public:
 
         else
         {
-            //Insert the new node to the right of the minimum node
-            newInsert->right = minimum->right;
-            newInsert->left = minimum;
-            (minimum->right)->left = newInsert;
-            minimum->right = newInsert;
+            //Insert the new node to the left of the minimum node
+            newInsert->right = minimum;
+            newInsert->left = minimum->left;
+            minimum->left = newInsert;
+            newInsert->left->right = newInsert;
 
             //If the new key is the new minimum, make minimum point to the new node
             if (newInsert->key < minimum->key)
@@ -159,8 +159,6 @@ public:
                 x->right = minimum;
                 x->left = minimum->left;
                 minimum->left = x;
-                if (x->key < minimum->key)
-                    minimum = x;
                 x->parent = nullptr;
                 x = ptr;
             } while (ptr != temp->child);
@@ -171,7 +169,10 @@ public:
         if (temp == temp->right && temp->child == nullptr)
             minimum = nullptr;
         else {
-            minimum = temp->right;
+            //Must make the smallest child of temp the new minimum
+            minimum = temp->left->right;
+            cout << "Consolidating the heap" << endl;
+            printKey();
             consolidate();
             
         }
@@ -205,7 +206,9 @@ public:
                     break; // Prevent a node from being linked to itself
                 }
                 if (x->key > y->key) {
-                    swap(x, y);
+                    Node* temp = x;
+                    x = y;
+                    y = temp;
                 }
                 Fibonnaci_link(y, x);
                 A[d] = nullptr;
@@ -232,6 +235,7 @@ public:
                         minimum = A[i];
                     }
                 }
+
             }
         }
     }
@@ -252,12 +256,13 @@ public:
         if (x->child == nullptr) {
             x->child = y;
         } else {
-            // Add y to the beginning of the child list (circular doubly linked list)
-            Node* lastChild = x->child->left; // Last child in x's current child list
-            lastChild->right = y;
-            x->child->left = y;
+            // Add y to the end of the child list (circular doubly linked list)
             y->right = x->child;
-            y->left = lastChild;
+            y->left = x->child->left;
+            x->child->left->right = y;
+            x->child->left = y;
+            
+            
         }
 
         // Increment the degree of x
@@ -302,6 +307,51 @@ public:
         } while (temp != minimum); // Ensure that we stop when we complete the loop
     }
 
+    /*
+    Merges the heap H2 into the current heap.
+Consumes H2, H2 should be empty after. H2’s
+root list should be inserted to the left of the
+minimum in H1, with the minimum in H2 being
+the first root inserted
+    */
+    void merge(BHeap<keytype> &H2)
+    {
+        if (H2.minimum == nullptr)
+        {
+            return;
+        }
+
+        if (minimum == nullptr)
+        {
+            minimum = H2.minimum;
+            no_of_nodes = H2.no_of_nodes;
+            H2.minimum = nullptr;
+            H2.no_of_nodes = 0;
+            return;
+        }
+        Node* temp = minimum->left;
+        
+        minimum->left->right = H2.minimum;
+        minimum->left = H2.minimum->left;
+        H2.minimum->left->right = minimum;
+        H2.minimum->left = temp;
+        
+        if (H2.minimum->key < minimum->key)
+        {
+            minimum = H2.minimum;
+        }
+
+        no_of_nodes += H2.no_of_nodes;
+
+        H2.minimum = nullptr;
+
+        H2.no_of_nodes = 0;
+
+
+        
+        
+    }
+
 
 
   
@@ -335,9 +385,29 @@ int main()
 	//Should output "B3: b c d e f g h i\n"
 	
 	H1.insert('j'); H1.insert('k'); H1.insert('l');
+
+    cout << "LOOK" << endl;
+    H1.printKey();
     
 	cout << H1.extractMin() << endl;	//Should output b
 
+	H1.printKey();
+	//Should output	B3:\n c j d e f g h i\n B1:\n k l\n"
+	
+	H2.insert('A'); H2.insert('B'); H2.insert('C'); H2.insert('D');
+	cout<< H2.extractMin() << endl;	//Should output A
 
+	H2.printKey();
+	//Should output "B1:\n B C\n B0:\n D\n"
+	
+	H1.merge(H2); H1.printKey();
+	//Should output "B1: B C\n B0:\n D\n B3:\n c j d e f g h i\n B1:\n k l\n"
+	
+	cout << H1.extractMin() << endl;	//Should output B
+
+	H1.printKey();
+	//Should output "B2:\n C D k l\n B3:\n c j d e f g h i\n"
+	
 	return 0;
+
 }
