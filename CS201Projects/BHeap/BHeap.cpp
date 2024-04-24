@@ -173,6 +173,7 @@ public:
         else {
             minimum = temp->right;
             consolidate();
+            
         }
         no_of_nodes--;
 
@@ -180,139 +181,91 @@ public:
         
     }
 
-    // Consolidating the heap
-    void consolidate()
+    void consolidate() 
     {
-
-        //Determine the maximum possible degree of a node in the heap
         int maxDegree = (int)log2(no_of_nodes) + 1;
-        
         vector<Node*> A(maxDegree, nullptr);
-        //Set the maximum possible degree of a node in the heap to nullptr
-        for (int i = 0; i <= maxDegree; i++)
-            A[i] = nullptr;
-        
-        //Go through each node in the root list
-        Node* w;
-        w = minimum;
-        
-        while (w->right != minimum) 
-        {
-            Node *x = w;
-            int d = x->degree;
-           
-            
-            while (A[d] != nullptr && A[d] != x) 
-            {
-                Node* y = A[d];
-                if (y == x)
-                {
-                    break;
-                }
-                else if (x->key > y->key) 
-                {
-                    Node* temp = x;
-                    x = y;
-                    y = temp;
-                }
-                
-                Fibonnaci_link(y, x);
 
+        Node* w = minimum;
+        if (w == nullptr) return;
+
+        vector<Node*> rootList; // Store all nodes in the root list
+        Node* current = w;
+        do {
+            rootList.push_back(current);
+            current = current->right;
+        } while (current != w);
+
+        for (Node* w : rootList) {
+            Node* x = w;
+            int d = x->degree;
+            while (A[d] != nullptr) {
+                Node* y = A[d];
+                if (y == x) {
+                    break; // Prevent a node from being linked to itself
+                }
+                if (x->key > y->key) {
+                    swap(x, y);
+                }
+                Fibonnaci_link(y, x);
                 A[d] = nullptr;
                 d++;
             }
             A[d] = x;
-            w = w->right;
-        }
-
-        //Do the same for the last node in the root list
-
-        Node* x = w;
-        int d = x->degree;
-        while (A[d] != nullptr) 
-        {
-
-            Node* y = A[d];
-            if (x->key > y->key) 
-            {
-                Node* temp = x;
-                x = y;
-                y = temp;
-            }
-            Fibonnaci_link(y, x);
-            A[d] = nullptr;
-            d++;
         }
 
         minimum = nullptr;
-
-        for (int i = 0; i <= no_of_nodes; i++)
-        {
-            if (A[i] != nullptr)
-            {
-                if (minimum == nullptr)
-                {
+        for (int i = 0; i < maxDegree; i++) {
+            if (A[i] != nullptr) {
+                A[i]->left = A[i];
+                A[i]->right = A[i];
+                if (minimum == nullptr) {
                     minimum = A[i];
-                }
-                else
-                {
-                    
-                    (minimum->left)->right = A[i];
+                } else {
+                    // Insert A[i] into the root list
+                    minimum->left->right = A[i];
                     A[i]->right = minimum;
                     A[i]->left = minimum->left;
                     minimum->left = A[i];
-                    
-
-                    if (A[i]->key < minimum->key)
-                    {
+                    // Update the minimum, if necessary
+                    if (A[i]->key < minimum->key) {
                         minimum = A[i];
                     }
                 }
             }
         }
-
     }
 
     // Linking the heap nodes in parent child relationship
-    void Fibonnaci_link(Node* ptr2, Node* ptr1)
+    void Fibonnaci_link(Node* y, Node* x) 
     {
-
-
-        //Remove node from root list of heap
-        (ptr2->left)->right = ptr2->right;
-        (ptr2->right)->left = ptr2->left;
-
-        //If the node is the only node in the root list, set minimum to nullptr
-        if (ptr1->right == ptr1)
-        {
-            minimum = ptr1;
-        }
-            
-
+        // Remove y from the root list
+        y->left->right = y->right;
+        y->right->left = y->left;
         
-        ptr2->left = ptr2;
-        ptr2->right = ptr2;
+        // Make y a child of x
+        y->parent = x;
+        y->left = y;   // Point y's left and right to itself to remove it from the root list
+        y->right = y;
 
-
-        ptr2->parent = ptr1;
-
-        //If the parent has no children, set the child to the new node
-        if (ptr1->child == nullptr)
-        {
-            ptr1->child = ptr2;
+        // Insert y into x's child list
+        if (x->child == nullptr) {
+            x->child = y;
+        } else {
+            // Add y to the beginning of the child list (circular doubly linked list)
+            Node* lastChild = x->child->left; // Last child in x's current child list
+            lastChild->right = y;
+            x->child->left = y;
+            y->right = x->child;
+            y->left = lastChild;
         }
 
-        //If the parent has children, add the new node to the right of the child
-        else if (ptr1->child != nullptr) 
-        {
-            ptr2->right = ptr1->child;
-            ptr2->left = (ptr1->child)->left;
-            ((ptr1->child)->left)->right = ptr2;
-            (ptr1->child)->left = ptr2;
-        }
-       
-        ptr1->degree++;
+        // Increment the degree of x
+        x->degree++;
+        
+        // Optionally clear y's mark if you're using marked nodes for decrease-key operations
     }
+
 
 
     void printPreOrder(Node* node)
@@ -351,146 +304,7 @@ public:
 
 
 
-    /*
-    printTree(Node* root)
-    {
-        if (root != nullptr) 
-        {
-            cout << root->key << endl;
-            for (int i = 0; i < 100; i++)
-            {
-                if (root->children[i] != nullptr)
-                {
-                    printTree(root->children[i]);
-                }
-            }
-        }
-    }
-
-
-
-
-
-    
-    
-        Writes the keys stored in the heap. Prints the
-    tree with the minimum first, then proceeds
-    through the root list printing each tree. When
-    printing a binomial tree, print the size of tree first
-    and then use a modified preorder traversal of the
-    tree. See the example below
-    */
-
-    
-
-   
-    
-
-    
-
-    //Returns minimum node for printing purposes
-    Node* getMinimum()
-    {
-        return(minimum);
-    }
-
-    /*
-    
-
-    //Prints the keys in preorder in the tree
-
-    void printTree(Node* root)
-    {
-        if (root != nullptr) 
-        {
-            cout << root->key << endl;
-            for (int i = 0; i < 100; i++)
-            {
-                if (root->children[i] != nullptr)
-                {
-                    printTree(root->children[i]);
-                }
-            }
-        }
-    }
-
-    //First prints the tree of the minimum node, then the rest of the trees in the root list by going to the right and then around
-    void printKey()
-    {
-        Node* temp = minimum;
-        printTree(minimum);
-        temp = minimum->right;
-        while (temp != minimum && temp != nullptr)
-        {
-            printTree(temp);
-            temp = temp->right;
-        }
-
-        temp = minimum;
-        while (temp->left != minimum && temp->left != nullptr)
-        {
-            temp = temp->left;
-        }
-
-        while (temp != minimum && temp != nullptr)
-        {   
-            printTree(temp);
-            if (temp != nullptr)
-            {
-                temp = temp->right;
-            }
-        }
-    
-
-    }
-
-    keytype extractMin()
-    {
-        // Store the minimum key.
-        keytype minKey = minimum->key;
-
-        // Remove the minimum node from the root list.
-        Node* oldMin = minimum;
-        if (oldMin->right == nullptr && oldMin->left == nullptr) 
-        {
-            minimum = nullptr;
-        } 
-        else 
-        {
-            oldMin->right->left = oldMin->left;
-            oldMin->left->right = oldMin->right;
-            
-            //Must find the min after we consolidate the trees
-        }
-
-        // Add the children of the minimum node to the root list.
-
-        int i = 0;
-        Node* prev = oldMin;
-        while (oldMin->children[i] != nullptr) 
-        {
-            Node* child = oldMin->children[i];
-            child->right = nullptr;
-            prev->right = child;
-            child->left = prev;
-            prev = child;
-            i++;
-            if (i == 100) 
-            {
-                break;
-            }
-        }
-
-        // Consolidate the heap.
-        //if (minimum != nullptr) 
-        //{
-            //consolidate();
-        //}
-
-        // Return the minimum key.
-        return minKey;
-    }
-    */
+  
 };
 
     
@@ -521,37 +335,9 @@ int main()
 	//Should output "B3: b c d e f g h i\n"
 	
 	H1.insert('j'); H1.insert('k'); H1.insert('l');
-
-    cout << "Final printKey: \n";
-    H1.printKey();
     
 	cout << H1.extractMin() << endl;	//Should output b
 
-
-	
-    /*
-	cout << H1.extractMin() << endl; //Should output a
-	
-	H1.printKey();
-	//Should output "B2:\n b c d e\n B0:\n f \n"
-	
-	H1.insert('g'); H1.insert('h'); H1.insert('a'); H1.insert('i');
-	
-	H1.printKey();
-	//Should output "B0:\n a\n B2:\n b c d e\n B0:\n f\n B0:\n g\n B0:\n h\n B0:\n i\n"
-	
-	cout << H1.extractMin() << endl; 	//Should output a
-
-	H1.printKey();	
-	//Should output "B3: b c d e f g h i\n"
-	
-	H1.insert('j'); H1.insert('k'); H1.insert('l');
-    
-	cout << H1.extractMin() << endl;	//Should output b
-
-	H1.printKey();
-	//Should output	B3:\n c j d e f g h i\n B1:\n k l\n"
-    */
 
 	return 0;
 }
