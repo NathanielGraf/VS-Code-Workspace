@@ -148,10 +148,11 @@ public:
         keytype returnKey = minimum->key;
         Node* temp = minimum;
         Node* ptr;
+        Node* start = nullptr;
         ptr = temp;
         Node* x = nullptr;
         if (temp->child != nullptr) {
-
+            start = temp->child;
             x = temp->child;
             do {
                 ptr = x->right;
@@ -170,9 +171,12 @@ public:
             minimum = nullptr;
         else {
             //Must make the smallest child of temp the new minimum
-            minimum = temp->left->right;
-            cout << "Consolidating the heap" << endl;
-            printKey();
+            if (start != nullptr)
+            {
+                minimum = start;
+            }
+            //cout << "Consolidating the heap" << endl;
+            //printKey();
             consolidate();
             
         }
@@ -386,8 +390,8 @@ int main()
 	
 	H1.insert('j'); H1.insert('k'); H1.insert('l');
 
-    cout << "LOOK" << endl;
-    H1.printKey();
+    //cout << "LOOK" << endl;
+    //H1.printKey();
     
 	cout << H1.extractMin() << endl;	//Should output b
 
