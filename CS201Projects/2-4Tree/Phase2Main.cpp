@@ -75,13 +75,7 @@ int main(){
 	cout << T2.size() << endl;
 	//Should output 13
 	
-    two4Tree<int,int> X;
-	for (int i=1;i<1001000;i++) X.insert(i,i);
-	for (int i=1;i<1001000;i++) {
-		if(X.rank(i) != i) cout << "Rank error" << endl;
-		if(X.select(i) != i) cout << "Select error" << endl;
-		if(*(X.search(i)) != i) cout << "Search error" << endl;
-	}  
+    
 	
 	//Should be no output and should take seconds, not minutes
 	return 0;

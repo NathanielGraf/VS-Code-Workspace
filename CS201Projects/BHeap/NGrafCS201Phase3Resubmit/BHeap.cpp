@@ -54,138 +54,6 @@ private:
 
     int no_of_nodes;
 
-    
-public:
-
-    //Heap should be empty:
-    BHeap()
-    {
-        minimum = nullptr;
-
-        no_of_nodes = 0;
-    }
-
-    BHeap(keytype k[], int s)
-    {
-        minimum = nullptr;
-
-        no_of_nodes = 0;
-
-        for (int i = 0; i < s; i++)
-        {
-            insert(k[i]);
-        }
-    }
-
-    //Returns the key for the mimimum node
-    keytype peekKey()
-    {
-        return(minimum->key);
-    }
-
-    void insert(keytype k)
-    {
-        //Create new node
-        Node *newInsert = new Node();
-
-        newInsert->left = newInsert;
-        newInsert->right = newInsert;
-
-        //Set key of new node
-        newInsert->key = k;
-
-        if (minimum == nullptr)
-        {
-            minimum = newInsert;
-        }
-
-        else
-        {
-            //Insert the new node to the left of the minimum node
-            newInsert->right = minimum;
-            newInsert->left = minimum->left;
-            minimum->left = newInsert;
-            newInsert->left->right = newInsert;
-
-            //If the new key is the new minimum, make minimum point to the new node
-            if (newInsert->key < minimum->key)
-            {
-                minimum = newInsert;
-            }
-        }
-       
-        no_of_nodes++;
-
-
-       
-    }
-
-    // Function to display the heap
-    void display()
-    {
-        Node* ptr = minimum;
-        if (ptr == nullptr)
-            cout << "The Heap is Empty" << endl;
-    
-        else {
-            cout << "The root nodes of Heap are: " << endl;
-            do {
-                cout << ptr->key;
-                ptr = ptr->right;
-                if (ptr != minimum) {
-                    cout << "-->";
-                }
-            } while (ptr != minimum && ptr->right != nullptr);
-            cout << endl
-                << "The heap has " << no_of_nodes << " nodes" << endl;
-        }
-    }
-
-    // Function to extract minimum node in the heap
-    keytype extractMin()
-    {
-        
-        keytype returnKey = minimum->key;
-        Node* temp = minimum;
-        Node* ptr;
-        Node* start = nullptr;
-        ptr = temp;
-        Node* x = nullptr;
-        if (temp->child != nullptr) {
-            start = temp->child;
-            x = temp->child;
-            do {
-                ptr = x->right;
-                (minimum->left)->right = x;
-                x->right = minimum;
-                x->left = minimum->left;
-                minimum->left = x;
-                x->parent = nullptr;
-                x = ptr;
-            } while (ptr != temp->child);
-        }
-        (temp->left)->right = temp->right;
-        (temp->right)->left = temp->left;
-        minimum = temp->right;
-        if (temp == temp->right && temp->child == nullptr)
-            minimum = nullptr;
-        else {
-            //Must make the smallest child of temp the new minimum
-            if (start != nullptr)
-            {
-                minimum = start;
-            }
-            //cout << "Consolidating the heap" << endl;
-            //printKey();
-            consolidate();
-            
-        }
-        no_of_nodes--;
-
-        return returnKey;
-        
-    }
-
     void consolidate() 
     {
         int maxDegree = (int)log2(no_of_nodes) + 1;
@@ -243,6 +111,123 @@ public:
             }
         }
     }
+
+    
+public:
+
+    //Heap should be empty:
+    BHeap()
+    {
+        minimum = nullptr;
+
+        no_of_nodes = 0;
+    }
+
+    BHeap(keytype k[], int s)
+    {
+        minimum = nullptr;
+
+        no_of_nodes = 0;
+
+        for (int i = 0; i < s; i++)
+        {
+            insert(k[i]);
+        }
+
+        consolidate();
+    }
+
+    //Returns the key for the mimimum node
+    keytype peekKey()
+    {
+        return(minimum->key);
+    }
+
+    void insert(keytype k)
+    {
+        //Create new node
+        Node *newInsert = new Node();
+
+        newInsert->left = newInsert;
+        newInsert->right = newInsert;
+
+        //Set key of new node
+        newInsert->key = k;
+
+        if (minimum == nullptr)
+        {
+            minimum = newInsert;
+        }
+
+        else
+        {
+            //Insert the new node to the left of the minimum node
+            newInsert->right = minimum;
+            newInsert->left = minimum->left;
+            minimum->left = newInsert;
+            newInsert->left->right = newInsert;
+
+            //If the new key is the new minimum, make minimum point to the new node
+            if (newInsert->key < minimum->key)
+            {
+                minimum = newInsert;
+            }
+        }
+       
+        no_of_nodes++;
+
+
+       
+    }
+
+    
+
+    // Function to extract minimum node in the heap
+    keytype extractMin()
+    {
+        
+        keytype returnKey = minimum->key;
+        Node* temp = minimum;
+        Node* ptr;
+        Node* start = nullptr;
+        ptr = temp;
+        Node* x = nullptr;
+        if (temp->child != nullptr) {
+            start = temp->child;
+            x = temp->child;
+            do {
+                ptr = x->right;
+                (minimum->left)->right = x;
+                x->right = minimum;
+                x->left = minimum->left;
+                minimum->left = x;
+                x->parent = nullptr;
+                x = ptr;
+            } while (ptr != temp->child);
+        }
+        (temp->left)->right = temp->right;
+        (temp->right)->left = temp->left;
+        minimum = temp->right;
+        if (temp == temp->right && temp->child == nullptr)
+            minimum = nullptr;
+        else {
+            //Must make the smallest child of temp the new minimum
+            if (start != nullptr)
+            {
+                minimum = start;
+            }
+            //cout << "Consolidating the heap" << endl;
+            //printKey();
+            consolidate();
+            
+        }
+        no_of_nodes--;
+
+        return returnKey;
+        
+    }
+
+    
 
     // Linking the heap nodes in parent child relationship
     void Fibonnaci_link(Node* y, Node* x) 
@@ -361,57 +346,3 @@ the first root inserted
   
 };
 
-    
-    
-
-/**/
-int main()
-{
-
-    char K[6] = {'a','b','c','d','e','f'};
-	
-	BHeap<char> H1, H2;
-	for(int i=0; i<6; i++) H1.insert(K[i]);
-	
-	cout << H1.extractMin() << endl; //Should output a
-	
-	H1.printKey();
-	//Should output "B2:\n b c d e\n B0:\n f \n"
-	
-	H1.insert('g'); H1.insert('h'); H1.insert('a'); H1.insert('i');
-	
-	H1.printKey();
-	//Should output "B0:\n a\n B2:\n b c d e\n B0:\n f\n B0:\n g\n B0:\n h\n B0:\n i\n"
-	
-	cout << H1.extractMin() << endl; 	//Should output a
-
-	H1.printKey();	
-	//Should output "B3: b c d e f g h i\n"
-	
-	H1.insert('j'); H1.insert('k'); H1.insert('l');
-
-    //cout << "LOOK" << endl;
-    //H1.printKey();
-    
-	cout << H1.extractMin() << endl;	//Should output b
-
-	H1.printKey();
-	//Should output	B3:\n c j d e f g h i\n B1:\n k l\n"
-	
-	H2.insert('A'); H2.insert('B'); H2.insert('C'); H2.insert('D');
-	cout<< H2.extractMin() << endl;	//Should output A
-
-	H2.printKey();
-	//Should output "B1:\n B C\n B0:\n D\n"
-	
-	H1.merge(H2); H1.printKey();
-	//Should output "B1: B C\n B0:\n D\n B3:\n c j d e f g h i\n B1:\n k l\n"
-	
-	cout << H1.extractMin() << endl;	//Should output B
-
-	H1.printKey();
-	//Should output "B2:\n C D k l\n B3:\n c j d e f g h i\n"
-	
-	return 0;
-
-}

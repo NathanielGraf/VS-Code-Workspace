@@ -878,52 +878,18 @@ public:
         return searchNode(node->children[node->type - 1], k);
     }
 
-    /*
 
-    int subtreeRank(Node* node, keytype k, int currentRank) {
-        if (!node) return currentRank;  // Base case: k is not found.
-
-        for (int i = 0; i < node->type - 1; i++) {
-            if (k == node->keys[i]) {
-                // Found k, so add the rank of keys before it in the current node.
-                currentRank += i;
-                // Add the subtree sizes of all previous children (to the left of the key).
-                for (int j = 0; j < i; ++j) {
-                    if (node->children[j]) {
-                        currentRank += node->children[j]->subtreeSize;
-                    }
-                }
-                return currentRank; // The rank of k is found.
-            } else if (k < node->keys[i]) {
-                // If k is less than the current key, go to the left child.
-                return subtreeRank(node->children[i], k, currentRank);
-            } else {
-                // If k is greater than the current key, add the subtree size and 1 (for the key itself).
-                currentRank += (node->children[i] ? node->children[i]->subtreeSize : 0) + 1;
-            }
-        }
-        // If k is greater than all keys in this node, go to the rightmost child.
-        return subtreeRank(node->children[node->type - 1], k, currentRank);
-    }
-
-    // Wrapper function to start from the root.
-    int rank(keytype k) {
-        return subtreeRank(root, k, 0);
-    }
-
-   
-    */
     
+    
+
+
+
     int rank(keytype k) 
     {
         return 0;
     }
 
-    int remove(keytype k) 
-    {
-        return 1;
-    }
-
+    
     keytype select(int pos) 
     {
         return root->keys[0];
