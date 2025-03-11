@@ -11,19 +11,11 @@ diamonds = [["D", 2], ["D", 3], ["D", 4], ["D", 5], ["D", 6], ["D", 7], ["D", 8]
 
 '''
 Elements: 
-5 for which card we are on 
+5 for which round we are on 
 52 for which cards the player has 
 52 for which cards the opponent has
 52 for which cards are left in the deck
-
-
-
-
-
-
 '''
-
-
 import random
 
 def shuffle(deck):

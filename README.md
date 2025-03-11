@@ -1,2 +1,3 @@
 # VS-Code-Workspace
-Repo for all of my projects and work in HS
+Helloooo welcome to my main repo where I put all of my projects and work for school and otherwise ฅ(^•ﻌ•^ฅ)
+

@@ -14,7 +14,7 @@ class DQNAgent:
         self.q_network = self.build_q_network()
         self.target_network = self.build_q_network()
         self.replay_buffer = []  # Experience replay buffer
-        self.batch_size = 100  # Mini-batch size 32
+        self.batch_size = 32  # Mini-batch size 32
 
         #Create input_shape:
         
@@ -68,6 +68,7 @@ class DQNAgent:
 
     def train(self):
         if len(self.replay_buffer) < self.batch_size:
+            print("Returned")
             return
 
         # Sample a mini-batch from the replay buffer
@@ -141,7 +142,10 @@ agent = DQNAgent(env)
 # Train the agent
 agent.train()
 
-# Test the agent
-agent.play(num_episodes=100)
+for i in range(10):
+    agent.play(num_episodes=100)
+    agent.train()
+
+
 
 #Print("Replay Buffer:", agent.replay_buffer)

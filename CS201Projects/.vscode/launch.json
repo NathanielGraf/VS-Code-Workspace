@@ -2,20 +2,6 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "type": "java",
-      "name": "Main",
-      "request": "launch",
-      "mainClass": "CS200Projects.Main",
-      "projectName": "VS-Code-Workspace_227981f1"
-    },
-    {
-      "type": "java",
-      "name": "Main",
-      "request": "launch",
-      "mainClass": "CS200Projects.Lab6.Main",
-      "projectName": "VS-Code-Workspace_faddea67"
-    },
-    {
       "name": "C/C++ Runner: Debug Session",
       "type": "cppdbg",
       "request": "launch",
