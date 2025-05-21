@@ -71,7 +71,7 @@ class CardGameEnv:
         return observation
 
 
-    def get_action_mask(self):\
+    def get_action_mask(self):
         
         #Returns a binary mask of length 52 where 1 indicates the card is still in the deck
         mask = [0] * 52
@@ -221,12 +221,21 @@ class CardGameEnv:
         player_strength = self.get_hand_strength(self.player_hand, player_suits, player_values)
         opponent_strength = self.get_hand_strength(self.opponent_hand, opponent_suits, opponent_values)
         
-        # If opponent_strength - player_strength is positive, player wins by that margin.
         diff = opponent_strength - player_strength
-        reward = np.log(diff)
+        win = 0
+        
+        if diff > 0: 
+            win = 1
+        else:
+            win = -1
+        
+        max_diff = 7461
+        # If opponent_strength - player_strength is positive, player wins by that margin.
+        
+        reward = win * (abs(diff)/max_diff) + win
       
         if len(self.player_hand) < 5:
-            reward = -4  # Heavy penalty if the player doesn't have enough cards.
+            reward = -2  # Heavy penalty if the player doesn't have enough cards.
         return reward
 
 

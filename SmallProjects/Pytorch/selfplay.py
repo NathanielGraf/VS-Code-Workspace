@@ -6,6 +6,7 @@ from tqdm import tqdm
 
 from env import CardGameEnv
 from model import PolicyNetwork
+from mcts import MCTS
 
 class SelfPlayTrainer:
     def __init__(self, env, policy_network, mcts_simulations=50, replay_buffer_size=10000, batch_size=32):
@@ -24,7 +25,7 @@ class SelfPlayTrainer:
         while not done:
             
             # Run MCTS to get improved policy
-            from mcts import MCTS  # Do this at the top of your file ideally
+           
             mcts = MCTS(CardGameEnv, policy_network)
 
             # Make sure to clone env state before passing it to MCTS

@@ -12,14 +12,25 @@ class PolicyNetwork(nn.Module):
         self.policy_head = nn.Linear(hidden_dim, action_dim)
         self.value_head = nn.Linear(hidden_dim, 1)
 
-    def forward(self, x):
+    def forward(self, x, mask=None):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
+        
+        logits = self.policy_head(x) 
+        if mask is not None:
+            # mask: 1 for available cards, 0 otherwise
+            logits = logits.masked_fill(mask == 0, -1e9)
 
+        probs = torch.sigmoid(logits)
+        value = self.value_head(x) 
+        return logits, probs, value
+        
+        '''
         raw_logits = self.policy_head(x)
         stabilized_logits = raw_logits - raw_logits.max(dim=1, keepdim=True).values
         action_probs = F.softmax(stabilized_logits, dim=-1)
+        '''
 
         value = self.value_head(x)
         return action_probs, value

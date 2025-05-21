@@ -13,9 +13,16 @@ class MCTSNode:
         self.children = {}  # action -> MCTSNode
 
     def value(self):
-        if self.visit_count == 0:
-            return 0
-        return self.value_sum / self.visit_count
+        if self.visit_count <= 0:
+            return 0.0
+        
+        avg = self.value_sum / self.visit_count
+        
+         # catch any NaN or Inf
+        if not math.isfinite(avg):
+            return 0.0
+        
+        return avg
 
     def is_expanded(self):
         return len(self.children) > 0
