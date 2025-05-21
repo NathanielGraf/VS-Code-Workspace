@@ -22,7 +22,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 env = CardGameEnv()
 obs_size = len(env.get_observation_space())
 act_size = env.get_action_space()
-policy_net = PolicyNetwork(input_dim=obs_size, action_dim=act_size).to(device)
+policy_net = PolicyNetwork(obs_dim=obs_size, n_cards=act_size).to(device)
 optimizer = optim.Adam(policy_net.parameters(), lr=lr)
 
 policy_losses   = []
