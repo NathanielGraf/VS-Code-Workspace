@@ -232,33 +232,6 @@ class CardGameEnv:
             self.round += 1  # Move to the next round
 
         return self.get_observation_space(), 0, done, {}, -1
-    
-    def potential(self, num_simulations=10):
-        """
-        Approximate P(win | current state) by random rollouts.
-        Returns a float in [0,1].
-        """
-        wins = 0
-        for _ in range(num_simulations):
-            sim = copy.deepcopy(self)   # snapshot current deck/round/hands
-            done = False
-            win  = 0
-
-            # play out till terminal
-            while not done:
-                # pick a random single‐card subset
-                mask = sim.get_action_mask()
-                avail = [i for i,m in enumerate(mask) if m]
-                choice = random.choice(avail)
-                # step returns (_, reward, done, _, win_flag)
-                _, _, done, _, win_flag = sim.step([choice])
-                win = win_flag  # last step’s win_flag
-
-            wins += win
-
-        return wins / num_simulations
-        
-        
 
     def calculate_reward(self):
        
@@ -278,10 +251,14 @@ class CardGameEnv:
         
         diff = opponent_strength - player_strength
         
+        sign = 1 if diff > 0 else -1
+        
         max_diff = 7461
         # If opponent_strength - player_strength is positive, player wins by that margin.
         
-        reward = np.tanh(diff/max_diff) 
+        margin = abs(diff) / max_diff  # Normalize the margin to be between 0 and 1
+        
+        reward = sign * (1 + margin)
       
         if len(self.player_hand) < 5:
             reward = -1  # Heavy penalty if the player doesn't have enough cards.

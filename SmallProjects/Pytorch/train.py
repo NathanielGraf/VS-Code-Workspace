@@ -58,11 +58,64 @@ def rollout_worker(args):
 
     return last_win
 
+def rollout_worker_random(args):
+    """
+    Perform exactly one random sim from a given snapshot.
+    args is a tuple: (state_snapshot, net_state_dict, device)
+    Returns 1 if win, else 0.
+    """
+    state_snapshot, net_weights, device = args
+
+    # 1) Rebuild env
+    sim = CardGameEnv()
+    sim.load_state(state_snapshot)
+
+    # 2) Play to terminal
+    done = False
+    last_win = 0
+    
+    while not done:
+        # pick a random subset
+        mask = sim.get_action_mask()                 
+        avail = [i for i,m in enumerate(mask) if m]     # indices of valid cards
+
+        # build a random subset: for each avail card flip a fair coin
+        subset = [i for i in avail if random.random() < 0.5]
+
+        # if we got the empty set, force at least one pick
+        if not subset:
+            subset = [random.choice(avail)]
+
+        # step with that subset
+        _, _, done, _, win_flag = sim.step(subset)
+        last_win = win_flag
+
+    return last_win
+
+def random_potential(env, net, _pool, num_sims=50, device="cuda"):
+    """
+    Estimate P(win | s) by simulating the rest of the game
+    using *random actions*, but batching all net calls.
+    """
+    
+    # 1) Take one snapshot of the real env
+    initial_state = env.get_state()
+    net_weights = net.state_dict()
+
+    args = [(initial_state, net_weights, device) for _ in range(num_sims)]
+
+    wins = 0 
+    
+    wins = _pool.map(rollout_worker_random, args)
+
+    return sum(wins) / num_sims
+
 def policy_potential(env, net, _pool, num_sims=50, device="cuda"):
     """
     Estimate P(win | s) by simulating the rest of the game
     using *your current policy*, but batching all net calls.
     """
+    num_sims = 200
     
     # 1) Take one snapshot of the real env
     initial_state = env.get_state()
@@ -82,10 +135,12 @@ def main():
     """
     
     # hyperparams/configs
-    num_episodes = 1000
+    num_episodes = 10000
     gamma = .99      
-    lr = 1e-4
-    value_coef = 0.5       # weight for value loss
+    lr = 1e-5
+    lam = 0.95       # GAE λ
+    ent_coef = 0.05   # weight for entropy loss
+    value_coef = 1      # weight for value loss
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # init
@@ -98,6 +153,8 @@ def main():
     policy_losses   = []
     value_losses    = []
     total_losses    = []
+    deltas   = []
+    phis     = []
     win_history     = []   # 1 if win, 0 if lose
 
     WORKERS = min(4, os.cpu_count() or 1)
@@ -106,19 +163,20 @@ def main():
 
     for episode in range(1, num_episodes + 1):
         state = env.reset()
-        print("Episode: ", episode)
+        #print("Episode: ", episode)
         done = False
-        ep_win = 0
-        #ep_loss = 0
-        #ep_reward = 0
         
-        log_probs = []
-        values    = []
-        rewards   = []
-        
+        # per-episode storage
+        logps, values, rewards, dones, entropies = [], [], [], [], []
+    
         #potential 
-        phi_t = 0.0
-
+        #phi_t = policy_potential(env, policy_net, _pool, num_sims=50, device=device)
+        
+        # 1) Compute initial V(s_0)
+        s0 = torch.FloatTensor(state).unsqueeze(0).to(device)
+        m0 = torch.FloatTensor(env.get_action_mask()).unsqueeze(0).to(device)
+        _, _, v0 = policy_net(s0, m0)
+        v_t = v0.detach()   # detach so GAE won't backprop through it
         while not done:
             
             # forward pass
@@ -140,14 +198,7 @@ def main():
 
             chosen_action = action_sample.squeeze(0).nonzero(as_tuple=True)[0].tolist()
             
-            
-            
             next_state, reward, done, _, win = env.step(chosen_action)
-            
-            # inside your episode loop, before sampling the real action:
-            phi_tp1 = policy_potential(env, policy_net, _pool, num_sims=50, device=device)
-            shaped   = gamma * phi_tp1 - phi_t
-            total_r  = reward + shaped
             
             with torch.no_grad():
                 if not done:
@@ -155,36 +206,64 @@ def main():
                     mask_t = torch.FloatTensor(env.get_action_mask()).unsqueeze(0).to(device)
                     _, _, next_value = policy_net(next_state_t, mask_t)
                 else:
-                    next_value = torch.zeros_like(value).to(device)
-
-            target = total_r + gamma * next_value
-            delta = target - value
+                    #next_value = torch.zeros_like(value).to(device)
+                    next_value = torch.zeros_like(value)
             
-            policy_loss = -logp * delta.detach()
-            value_loss = delta.pow(2)  # MSE
-            loss = policy_loss + value_coef * value_loss - 1e-2 * ent
-
-            # record
-            log_probs.append(logp)
-            values.append(value.squeeze(0))
+            # inside your episode loop, before sampling the real action:
+            #phi_tp1 = policy_potential(env, policy_net, _pool, num_sims=50, device=device)
+            v_tp1  = next_value.detach()   # detach so GAE won't backprop through it
+            shaped   = (gamma * v_tp1 - v_t).item()
+            total_r  = reward + shaped
+            
+            
+            logps.append(logp)
+            values.append(v_t)
             rewards.append(total_r)
+            dones.append(done)
+            entropies.append(ent)
             
-            # backward
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+            # clip gradients
+            #torch.nn.utils.clip_grad_norm_(policy_net.parameters(), max_norm=0.5)
             
-            phi_t = phi_tp1
-
             state = next_state
+            v_t = v_tp1
 
+        # append final bootstrap value = 0 at terminal
+        values.append(torch.zeros_like(v_t).to(device))
         
+        # —— GAE/Lambda computation —— 
+        advantages = []
+        gae = 0.0
+        # reverse through time
+        for t in reversed(range(len(rewards))):
+            delta = rewards[t] + gamma * values[t+1] * (1 - dones[t]) - values[t]
+            gae   = delta + gamma * lam * (1 - dones[t]) * gae
+            advantages.insert(0, gae)
+        advantages = torch.stack(advantages).to(device)
+        returns    = advantages + torch.stack(values[:-1])
+        
+            # —— Losses & update —— 
+        logps_tensor   = torch.stack(logps)
+        values_tensor  = torch.stack(values[:-1])
+        ent_tensor     = torch.stack(entropies)
+
+        policy_loss = - (logps_tensor * advantages.detach()).mean()
+        value_loss  = (returns - values_tensor).pow(2).mean()
+        entropy_loss= - ent_tensor.mean()
+
+        loss = policy_loss + value_coef * value_loss + ent_coef * entropy_loss
+
+        optimizer.zero_grad()
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(policy_net.parameters(), max_norm=0.5)
+        optimizer.step()
+
+        # logging
         policy_losses.append(policy_loss.item())
         value_losses.append(value_loss.item())
-        total_losses.append((policy_loss+value_coef*value_loss).item())
-        win_history.append(win)
-        
-
+        total_losses.append(loss.item())
+        win_history.append(int(win))
+            
         if episode % 50 == 0:
             avg_reward = np.mean(rewards)
             avg_value = torch.mean(torch.stack(values)).item()
@@ -199,12 +278,16 @@ def main():
                 f"Avg Value Loss: {avg_value_loss:.2f} | "
                 f"Avg Total Loss: {avg_total_loss:.2f} | "
                 f"Win Rate: {np.mean(win_history[-50:]):.2f}")
+            
+        #print("Advantage stats:", advantages.mean().item(), advantages.std().item())
     
-    # smooth both curves over 100 episodes
-    smoothed_policy = moving_average(policy_losses, w=100)
-    smoothed_value  = moving_average(value_losses, w=100)
-    smoothed_loss = moving_average(total_losses, w=100)
-    smoothed_win  = moving_average(win_history, w=100)
+    
+    # smooth both curves over episodes
+    episodes = 100
+    smoothed_policy = moving_average(policy_losses, w=episodes)
+    smoothed_value  = moving_average(value_losses, w=episodes)
+    smoothed_loss = moving_average(total_losses, w=episodes)
+    smoothed_win  = moving_average(win_history, w=episodes)
 
     fig, axs = plt.subplots(2, 2, figsize=(12, 8))
 
@@ -231,6 +314,30 @@ def main():
     axs[1, 1].set_title("Smoothed Win Rate (w=100)")
     axs[1, 1].set_xlabel("Episode")
     axs[1, 1].set_ylabel("Win Rate")
+    
+    
+
+    plt.tight_layout()
+    plt.show()
+    
+    # start a brand-new figure for your diagnostics
+    plt.figure(figsize=(12,4))
+
+    # left: TD-error histogram
+    plt.subplot(1,2,1)
+    plt.hist(deltas, bins=50)
+    plt.title("TD-Error δ")
+    plt.xlabel("δ")
+    plt.ylabel("Count")
+
+    # right: φ before / after
+    plt.subplot(1,2,2)
+    xs = np.array(phis)
+    plt.plot(xs[:,0], label="φ_t")
+    plt.plot(xs[:,1], label="φ_tp1")
+    plt.title("Potential before/after")
+    plt.xlabel("Step")
+    plt.legend()
 
     plt.tight_layout()
     plt.show()
