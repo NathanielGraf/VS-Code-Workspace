@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from torch.distributions import Bernoulli
 import random
 import copy
+from concurrent.futures import ProcessPoolExecutor
 
 from env import CardGameEnv
 from model import PolicyNetwork
@@ -32,41 +33,52 @@ value_losses    = []
 total_losses    = []
 win_history     = []   # 1 if win, 0 if lose
 
-def policy_potential(env, net, num_sims=50, device="gpu"):
+def policy_potential(env, net, num_sims=50, device="cuda"):
     """
     Estimate P(win | s) by simulating the rest of the game
-    using *your current policy* (net) instead of random play.
+    using *your current policy*, but batching all net calls.
     """
-    wins = 0
-    for _ in range(num_sims):
-        sim = copy.deepcopy(env)              # snapshot the env
-        done = False
-        last_win = 0
-        
-        while not done:
-            # 1) featurize
-            s_t   = torch.FloatTensor(sim.get_observation_space())\
-                          .unsqueeze(0).to(device)
-            mask_t= torch.FloatTensor(sim.get_action_mask())\
-                          .unsqueeze(0).to(device)
-            # 2) get policy probs
-            _, probs, _ = net(s_t, mask_t)
-            dist        = Bernoulli(probs)
-            # 3) sample a subset
-            a_mask      = dist.sample().squeeze(0)
-            # ensure non‐empty
-            if a_mask.sum() == 0:
-                avail = mask_t.squeeze(0).nonzero(as_tuple=False)
-                idx   = avail[random.randrange(len(avail))]
-                a_mask[idx] = 1
-            # convert mask→list of cards
-            action = a_mask.nonzero(as_tuple=True)[0].tolist()
-            # 4) step
-            _, _, done, _, win_flag = sim.step(action)
-            last_win = win_flag
+    
+    # 1) Take one snapshot of the real env
+    initial_state = env.get_state()
+    sims = [CardGameEnv() for _ in range(num_sims)]
+    for sim in sims:
+        sim.load_state(initial_state)
 
-        wins += last_win
-    return wins / num_sims
+    win_flags = [0] * num_sims
+
+    with torch.no_grad():
+        # Renjie Poker always has 5 rounds
+        for _ in range(5):
+            # 2) batch up all current states & masks
+            states = [sim.get_observation_space() for sim in sims]
+            masks  = [sim.get_action_mask()      for sim in sims]
+            s_t = torch.FloatTensor(states).to(device)   # [num_sims, obs_dim]
+            m_t = torch.FloatTensor(masks).to(device)    # [num_sims, act_dim]
+
+            # 3) single forward pass for the whole batch
+            _, probs_batch, _ = net(s_t, m_t)            # [num_sims, act_dim]
+            dist = Bernoulli(probs_batch)
+
+            # 4) sample all actions at once
+            a_masks = dist.sample().cpu().numpy()        # (num_sims, act_dim)
+
+            # 5) enforce non-empty for each sim and step
+            for i, sim in enumerate(sims):
+                mask = a_masks[i]
+                if mask.sum() == 0:
+                    # pick one available at random
+                    avail = np.nonzero(masks[i])[0]
+                    mask = np.zeros_like(mask)
+                    mask[random.choice(avail)] = 1
+
+                action = mask.nonzero()[0].tolist()
+                _, reward, done, _, win_flag = sim.step(action)
+                if done:
+                    win_flags[i] = win_flag
+
+    # 6) return fraction of sims that won
+    return sum(win_flags) / num_sims
 
 for episode in range(1, num_episodes + 1):
     state = env.reset()

@@ -112,6 +112,7 @@ class CardGameEnv:
                 
         return (suit, rank)
 
+    '''
     def clone_state(self):
         return {
             "deck": copy.deepcopy(self.deck),
@@ -129,7 +130,32 @@ class CardGameEnv:
         self.round = state["round"]
         self.player_suits = copy.deepcopy(state["player_suits"])
         self.player_values = copy.deepcopy(state["player_values"])
+    '''
+    def get_state(self):
+       
+        #Return a shallow copy of all mutable env data.
+        
+        return {
+            "deck":           list(self.deck),
+            "player_hand":    list(self.player_hand),
+            "opponent_hand":  list(self.opponent_hand),
+            "round":          self.round,
+            "player_suits":   dict(self.player_suits),
+            "player_values":  dict(self.player_values),
+        }
 
+    def load_state(self, state):
+        
+        #Restore the env from a snapshot produced by get_state().
+       
+        self.deck          = list(state["deck"])
+        self.player_hand   = list(state["player_hand"])
+        self.opponent_hand = list(state["opponent_hand"])
+        self.round         = state["round"]
+        self.player_suits  = dict(state["player_suits"])
+        self.player_values = dict(state["player_values"])
+    
+    
     def reset(self):
         self.deck = self.shuffle_deck(self.cards.copy())
         self.round = 1
