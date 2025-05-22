@@ -206,6 +206,33 @@ class CardGameEnv:
             self.round += 1  # Move to the next round
 
         return self.get_observation_space(), 0, done, {}, -1
+    
+    def potential(self, num_simulations=10):
+        """
+        Approximate P(win | current state) by random rollouts.
+        Returns a float in [0,1].
+        """
+        wins = 0
+        for _ in range(num_simulations):
+            sim = copy.deepcopy(self)   # snapshot current deck/round/hands
+            done = False
+            win  = 0
+
+            # play out till terminal
+            while not done:
+                # pick a random single‐card subset
+                mask = sim.get_action_mask()
+                avail = [i for i,m in enumerate(mask) if m]
+                choice = random.choice(avail)
+                # step returns (_, reward, done, _, win_flag)
+                _, _, done, _, win_flag = sim.step([choice])
+                win = win_flag  # last step’s win_flag
+
+            wins += win
+
+        return wins / num_simulations
+        
+        
 
     def calculate_reward(self):
        
@@ -218,24 +245,20 @@ class CardGameEnv:
         opponent_suits = self._get_suit_dict(self.opponent_hand)
         opponent_values = self._get_value_dict(self.opponent_hand)
         
+
+        
         player_strength = self.get_hand_strength(self.player_hand, player_suits, player_values)
         opponent_strength = self.get_hand_strength(self.opponent_hand, opponent_suits, opponent_values)
         
         diff = opponent_strength - player_strength
-        win = 0
-        
-        if diff > 0: 
-            win = 1
-        else:
-            win = -1
         
         max_diff = 7461
         # If opponent_strength - player_strength is positive, player wins by that margin.
         
-        reward = win * (abs(diff)/max_diff) + win
+        reward = np.tanh(diff/max_diff) 
       
         if len(self.player_hand) < 5:
-            reward = -2  # Heavy penalty if the player doesn't have enough cards.
+            reward = -1  # Heavy penalty if the player doesn't have enough cards.
         return reward
 
 

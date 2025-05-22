@@ -1,7 +1,9 @@
 import torch
 import torch.optim as optim
 import matplotlib.pyplot as plt
-from torch.distributions import Categorical
+from torch.distributions import Bernoulli
+import random
+import copy
 
 from env import CardGameEnv
 from model import PolicyNetwork
@@ -12,8 +14,8 @@ import numpy as np
 #Ellis was here she's the best <3
 
 # hyperparams/configs
-num_episodes = 10000
-gamma = .99           # since reward only comes at end, you can leave this at 1
+num_episodes = 1000
+gamma = .99      
 lr = 1e-4
 value_coef = 0.5       # weight for value loss
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -29,21 +31,60 @@ policy_losses   = []
 value_losses    = []
 total_losses    = []
 win_history     = []   # 1 if win, 0 if lose
-avg_win_rate    = []
-avg_loss        = []
-log_interval    = 50   # how often you compute/plot a running average
+
+def policy_potential(env, net, num_sims=50, device="gpu"):
+    """
+    Estimate P(win | s) by simulating the rest of the game
+    using *your current policy* (net) instead of random play.
+    """
+    wins = 0
+    for _ in range(num_sims):
+        sim = copy.deepcopy(env)              # snapshot the env
+        done = False
+        last_win = 0
+        
+        while not done:
+            # 1) featurize
+            s_t   = torch.FloatTensor(sim.get_observation_space())\
+                          .unsqueeze(0).to(device)
+            mask_t= torch.FloatTensor(sim.get_action_mask())\
+                          .unsqueeze(0).to(device)
+            # 2) get policy probs
+            _, probs, _ = net(s_t, mask_t)
+            dist        = Bernoulli(probs)
+            # 3) sample a subset
+            a_mask      = dist.sample().squeeze(0)
+            # ensure non‐empty
+            if a_mask.sum() == 0:
+                avail = mask_t.squeeze(0).nonzero(as_tuple=False)
+                idx   = avail[random.randrange(len(avail))]
+                a_mask[idx] = 1
+            # convert mask→list of cards
+            action = a_mask.nonzero(as_tuple=True)[0].tolist()
+            # 4) step
+            _, _, done, _, win_flag = sim.step(action)
+            last_win = win_flag
+
+        wins += last_win
+    return wins / num_sims
 
 for episode in range(1, num_episodes + 1):
     state = env.reset()
+    print("Episode: ", episode)
+    done = False
+    ep_win = 0
     #ep_loss = 0
     #ep_reward = 0
     
     log_probs = []
     values    = []
     rewards   = []
+    
+    #potential 
+    phi_t = 0.0
 
-    done = False
     while not done:
+        
         # forward pass
         state_t = torch.FloatTensor(state).unsqueeze(0).to(device)
         mask_t = torch.FloatTensor(env.get_action_mask()).unsqueeze(0).to(device)
@@ -59,59 +100,76 @@ for episode in range(1, num_episodes + 1):
             action_sample[0, idx] = 1
 
         logp = dist.log_prob(action_sample).sum(dim=1)  # total log-prob
+        ent = dist.entropy().sum(dim=1)  # entropy
 
-        # turn binary mask into list of indices
-        selected_indices = action_sample.squeeze(0).nonzero(as_tuple=True)[0].tolist()
+        chosen_action = action_sample.squeeze(0).nonzero(as_tuple=True)[0].tolist()
+        
+        
+        
+        next_state, reward, done, _, win = env.step(chosen_action)
+        
+        # inside your episode loop, before sampling the real action:
+        phi_tp1 = policy_potential(env, policy_net, num_sims=50, device=device)
+        shaped   = gamma * phi_tp1 - phi_t
+        total_r  = reward + shaped
+        
+        with torch.no_grad():
+            if not done:
+                next_state_t = torch.FloatTensor(next_state).unsqueeze(0).to(device)
+                mask_t = torch.FloatTensor(env.get_action_mask()).unsqueeze(0).to(device)
+                _, _, next_value = policy_net(next_state_t, mask_t)
+            else:
+                next_value = torch.zeros_like(value).to(device)
 
-        next_state, reward, done, _, _ = env.step(selected_indices)
+        target = total_r + gamma * next_value
+        delta = target - value
+        
+        policy_loss = -logp * delta.detach()
+        value_loss = delta.pow(2)  # MSE
+        loss = policy_loss + value_coef * value_loss - 1e-2 * ent
 
         # record
         log_probs.append(logp)
         values.append(value.squeeze(0))
-        rewards.append(reward)
+        rewards.append(total_r)
+        
+        # backward
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        
+        phi_t = phi_tp1
 
         state = next_state
 
-    # compute returns (R_t = sum_{k=t..T} γ^{k-t} r_k)
-    returns = []
-    R = 0
-    for r in reversed(rewards):
-        R = r + gamma * R
-        returns.insert(0, R)
-    returns = torch.tensor(returns).to(device)
-    values = torch.stack(values)
-    log_probs = torch.stack(log_probs)
-
-    # advantage = R - V(s)
-    advantage = returns - values
-    # normalize advantage
-    advantage = (advantage - advantage.mean()) / (advantage.std() + 1e-8)
-    
-
-    # losses
-    policy_loss = -(log_probs * advantage.detach()).mean()
-    value_loss  = advantage.pow(2).mean()
-    
-    ent = dist.entropy().sum(dim=1).mean()
-    loss = policy_loss + value_coef * value_loss - 1e-2 * ent
     
     policy_losses.append(policy_loss.item())
     value_losses.append(value_loss.item())
     total_losses.append((policy_loss+value_coef*value_loss).item())
-    win_history.append(int(returns[0]>0))
-
-    # backward
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
+    win_history.append(win)
+    
 
     if episode % 50 == 0:
-        print(f"Episode {episode}\tLoss: {loss.item():.3f}\tReturn: {returns[0]:.3f}")
+        avg_reward = np.mean(rewards)
+        avg_value = torch.mean(torch.stack(values)).item()
+        avg_policy_loss = np.mean(policy_losses[-50:])
+        avg_value_loss = np.mean(value_losses[-50:])
+        avg_total_loss = np.mean(total_losses[-50:])
+        
+        print(f"Episode {episode}/{num_episodes} | "
+              f"Avg Reward: {avg_reward:.2f} | "
+              f"Avg Value: {avg_value:.2f} | "
+              f"Avg Policy Loss: {avg_policy_loss:.2f} | "
+              f"Avg Value Loss: {avg_value_loss:.2f} | "
+              f"Avg Total Loss: {avg_total_loss:.2f} | "
+              f"Win Rate: {np.mean(win_history[-50:]):.2f}")
 
 
 # moving average for win‐rate
 def moving_average(x, w=100):
     return np.convolve(x, np.ones(w)/w, mode='valid')
+
+
 
 # smooth both curves over 100 episodes
 smoothed_policy = moving_average(policy_losses, w=100)
