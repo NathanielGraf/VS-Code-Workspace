@@ -44,10 +44,101 @@ def sort_hand(hand):
 def main():
     deck = shuffle(cards)
     
-    
-    #RF chase implementation:
     player_hand = []
     opponent_hand = []
+    
+    #Straight chase implementation:
+    #Attempt to get a straight with our 5 cards:
+
+    # do 5-10 for first subset:
+    '''
+    if len(deck) != 0:
+        current_card = deck.pop(0)
+        while current_card[1] < 5 or current_card[1] > 10:
+            opponent_hand.append(current_card)
+            if len(deck) == 0:
+                break
+            current_card = deck.pop(0)
+        
+        player_hand.append(current_card)
+        
+    player_hand.sort()
+    
+    # do cards + - 4 for second subset:
+    if len(deck) != 0:
+        current_card = deck.pop(0)
+        # Add this card to our hand if it is within 4 of the first card, remember Ace can be high or low:
+        while current_card[1] >= player_hand[0][1] + 5 or current_card[1] <= player_hand[0][1] - 5:
+            
+            if current_card[1] == 14 and player_hand[0][1] <= 5:
+                break
+            else:
+                opponent_hand.append(current_card)
+            
+            if len(deck) == 0:
+                break
+            current_card = deck.pop(0)
+            
+        if len(deck) != 0:
+            player_hand.append(current_card)
+            
+    #Sort for order
+    player_hand.sort()
+    
+    # Take all cards less than 5 ranks higher than min card, and less than 5 ranks lower than max card:
+    
+    if len(deck) != 0:
+        current_card = deck.pop(0)
+        while current_card[1] >= player_hand[0][1] + 5 or current_card[1] <= player_hand[4][1] - 5:
+            
+            if current_card[1] == 14 and player_hand[4][1] >= 10:
+                break
+            else:
+                opponent_hand.append(current_card)
+            
+            if len(deck) == 0:
+                break
+            current_card = deck.pop(0)
+        
+        if len(deck) != 0:
+            player_hand.append(current_card)
+
+    player_hand.sort()
+    '''
+    
+    #9 house implementation:
+    
+
+    # Step 1: Take any two cards with rank 9 or above
+    while len(player_hand) < 2 and deck:
+        card = deck.pop(0)
+        if card[1] >= 9:
+            player_hand.append(card)
+        else:
+            opponent_hand.append(card)
+
+    # Step 2: After picking two cards >=9, go for a full house using those values
+    if len(player_hand) == 2:
+        target_ranks = [card[1] for card in player_hand]
+        while len(player_hand) < 5 and deck:
+            card = deck.pop(0)
+            if card[1] in target_ranks:
+                player_hand.append(card)
+            else:
+                opponent_hand.append(card)
+    
+    
+    
+    
+    
+
+
+
+    '''
+
+
+    #RF chase implementation:
+    
     
     #First card is any card 10 or up
     if len(deck) != 0:
@@ -124,6 +215,9 @@ def main():
             current_card = deck.pop(0)
         
         player_hand.append(current_card)
+    '''
+    
+    
     
     if len(deck) != 0:
         while len(opponent_hand) < 8: 
