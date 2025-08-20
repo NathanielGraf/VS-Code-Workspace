@@ -618,7 +618,6 @@ class CardGameEnv:
         #Finish fixing the pair and high card functions, add high card tiebreak functionality.
         
     def high_card_check(self, values):
-        
         cards = []
         for i in values:
             if values[i] != 0:
