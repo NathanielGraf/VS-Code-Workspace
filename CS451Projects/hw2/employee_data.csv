@@ -1,0 +1,10 @@
+employee_id,name,age,salary,department,status
+1,John Smith,29,40000,Marketing,Active
+2,Jane Doe,35,50000,Sales,Active
+3,Alice Johnson,30,60000,IT,Inactive
+4,Michael Brown,25,,HR,Inactive
+5,Sarah White,28,42000,Marketing,Active
+6,John Smith,29,40000,Marketing,Active
+7,David Green,40,150000,Sales,Active
+8,Alice Johnson,30,60000,IT,Inactive
+9,Michael Brown,25,,HR,Inactive
